@@ -1,14 +1,21 @@
+<?php
+// Localhost vs domain path resolution (same pattern as other citizen pages)
+if ($_SERVER['HTTP_HOST'] === 'localhost') {
+    $BASE_URL = '/LGU/infragovservices/public/';
+} else {
+    $BASE_URL = '/public/';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <base href="/public/">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
         <title>InfraGovServices</title>
         <!-- Favicon-->
-        <link rel="icon" type="image" href="logocityhall.png" />
+        <link rel="icon" type="image" href="<?= $BASE_URL ?>logocityhall.png" />
         <!-- Bootstrap Icons-->
          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
@@ -18,7 +25,7 @@
         <!-- SimpleLightbox plugin CSS-->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
-        <link href="styles.css" rel="stylesheet" />
+        <link href="<?= $BASE_URL ?>styles.css" rel="stylesheet" />
     </head>
     <body id="page-top">
         <!-- Navigation-->
@@ -159,8 +166,8 @@
             <div class="container-fluid p-0">
                 <div class="row g-0">
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/1.jpg" title="Quezon City Hall">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/1.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/1.jpg" title="Quezon City Hall">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/1.jpg" alt="..." />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">Quezon City Hall</div>
@@ -168,8 +175,8 @@
                         </a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/2.jpg" title="Quezon City Council Legislative Building">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/2.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/2.jpg" title="Quezon City Council Legislative Building">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/2.jpg" alt="..." />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">Quezon City Council Legislative Building</div>
@@ -177,8 +184,8 @@
                         </a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/3.jpg" title="Quezon City Public Library – Main">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/3.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/3.jpg" title="Quezon City Public Library – Main">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/3.jpg" alt="..." />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">Quezon City Public Library – Main</div>
@@ -186,8 +193,8 @@
                         </a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/4.jpg" title="QC MICE Center / Convention Center">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/4.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/4.jpg" title="QC MICE Center / Convention Center">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/4.jpg" alt="..." />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">QC MICE Center / Convention Center</div>
@@ -195,8 +202,8 @@
                         </a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/5.jpg" title="Quezon City Hall Public Plaza & Parking">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/5.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/5.jpg" title="Quezon City Hall Public Plaza & Parking">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/5.jpg" alt="..." />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">Quezon City Hall Public Plaza & Parking</div>
@@ -204,8 +211,8 @@
                         </a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
-                        <a class="portfolio-box" href="assets/img/portfolio/fullsize/6.jpg" title="Citizen One‑Stop Service Center QC">
-                            <img class="img-fluid" src="assets/img/portfolio/thumbnails/6.jpg" alt="..." />
+                        <a class="portfolio-box" href="<?= $BASE_URL ?>assets/img/portfolio/fullsize/6.jpg" title="Citizen One‑Stop Service Center QC">
+                            <img class="img-fluid" src="<?= $BASE_URL ?>assets/img/portfolio/thumbnails/6.jpg" alt="..." />
                             <div class="portfolio-box-caption p-3">
                                 <div class="project-category text-white-50">Facility</div>
                                 <div class="project-name">Citizen One‑Stop Service Center QC</div>
@@ -224,7 +231,7 @@
         <!-- SimpleLightbox plugin JS-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js"></script>
         <!-- Core theme JS-->
-        <script src="scripts.js"></script>
+        <script src="<?= $BASE_URL ?>scripts.js"></script>
         <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
         <!-- * *                               SB Forms JS                               * *-->
         <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
