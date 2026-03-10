@@ -30,7 +30,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <style>
             header.masthead {
                 background: linear-gradient(to bottom, rgba(92, 77, 66, 0.8) 0%, rgba(92, 77, 66, 0.8) 100%),
-                            url('<?= $BASE_URL ?>assets/img/memcir.jpeg') center/cover no-repeat scroll !important;
+                            url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll !important;
             }
         </style>
     </head>
