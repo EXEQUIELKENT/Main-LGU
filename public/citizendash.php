@@ -29,8 +29,16 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <!-- Override masthead background so it resolves correctly on both localhost and domain -->
         <style>
             header.masthead {
-                background: linear-gradient(to bottom, rgba(92, 77, 66, 0.8) 0%, rgba(92, 77, 66, 0.8) 100%),
+                  padding-top: 10rem;
+                padding-bottom: calc(10rem - 4.5rem);
+                                background: 
                             url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll !important;
+                backdrop-filter: blur(6px); /* actual blur */
+                z-index: 0; /* keeps blur behind content */
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: scroll;
+                background-size: cover;
             }
         </style>
     </head>
