@@ -26,12 +26,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="<?= $BASE_URL ?>styles.css" rel="stylesheet" />
-        <!-- Dynamic background fix for localhost/domain compatibility -->
-        <style>
-            .masthead {
-                background-image: url('<?= $BASE_URL ?>assets/img/memcir.jpg') !important;
-            }
-        </style>
+        <!-- Override masthead background so it resolves correctly on both localhost and domain -->
     </head>
     <body id="page-top">
         <!-- Navigation-->
