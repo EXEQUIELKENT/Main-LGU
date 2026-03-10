@@ -37,7 +37,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                 content: '';
                 position: absolute;
                 inset: 0;
-                background: url('<?= $BASE_URL ?>assets/img/memcir.jpeg') center/cover no-repeat scroll;
+                background: url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll;
                 filter: blur(6px);
                 transform: scale(1.08); /* prevents blur edge bleed */
                 z-index: 0;
