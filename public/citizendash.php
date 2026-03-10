@@ -27,6 +27,12 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="<?= $BASE_URL ?>styles.css" rel="stylesheet" />
         <!-- Override masthead background so it resolves correctly on both localhost and domain -->
+        <style>
+            header.masthead {
+                background: linear-gradient(to bottom, rgba(92, 77, 66, 0.8) 0%, rgba(92, 77, 66, 0.8) 100%),
+                            url('<?= $BASE_URL ?>assets/img/memcir.jpeg') center/cover no-repeat scroll !important;
+            }
+        </style>
     </head>
     <body id="page-top">
         <!-- Navigation-->
