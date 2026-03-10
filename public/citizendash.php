@@ -29,7 +29,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <!-- Override masthead background so it resolves correctly on both localhost and domain -->
         <style>
             header.masthead {
-                background: linear-gradient(...overlay...), url('<?= $BASE_URL ?>assets/img/memcir.jpg') !important;
+                background: url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll !important;
                 background-position: center !important;
                 background-size: cover !important;
                 backdrop-filter: blur(6px) !important;
