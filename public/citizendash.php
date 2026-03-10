@@ -28,29 +28,22 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <link href="<?= $BASE_URL ?>styles.css" rel="stylesheet" />
         <!-- Override masthead background so it resolves correctly on both localhost and domain -->
         <style>
+            /* Clear the broken relative-path background from styles.css */
             header.masthead {
-                position: relative;
-                overflow: hidden;
+                background: none !important;
+                position: relative !important;
+                overflow: hidden !important;
             }
-            /* Pseudo-element holds the blurred background image — works on all browsers/environments */
+            /* ::before — blurred background image using absolute PHP-injected path */
             header.masthead::before {
                 content: '';
                 position: absolute;
-                inset: 0;
-                background: url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll;
+                inset: -15px; /* overshoot to hide blur edge bleed */
+                background: url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat;
                 filter: blur(6px);
-                transform: scale(1.08); /* prevents blur edge bleed */
                 z-index: 0;
             }
-            /* Dark gradient overlay sits on top of the blurred image */
-            header.masthead::after {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(to bottom, rgba(92, 77, 66, 0.8) 0%, rgba(92, 77, 66, 0.8) 100%);
-                z-index: 1;
-            }
-            /* Keep all header content above both pseudo-elements */
+            /* Keep all header content above the blurred layer */
             header.masthead .container {
                 position: relative;
                 z-index: 2;
