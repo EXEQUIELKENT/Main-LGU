@@ -29,11 +29,31 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <!-- Override masthead background so it resolves correctly on both localhost and domain -->
         <style>
             header.masthead {
-                background: url('<?= $BASE_URL ?>assets/img/memcir.jpg') center/cover no-repeat scroll !important;
-                background-position: center !important;
-                background-size: cover !important;
-                backdrop-filter: blur(6px) !important;
-                -webkit-backdrop-filter: blur(6px) !important;  /* Safari support */
+                position: relative;
+                overflow: hidden;
+            }
+            /* Pseudo-element holds the blurred background image — works on all browsers/environments */
+            header.masthead::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: url('<?= $BASE_URL ?>assets/img/memcir.jpeg') center/cover no-repeat scroll;
+                filter: blur(6px);
+                transform: scale(1.08); /* prevents blur edge bleed */
+                z-index: 0;
+            }
+            /* Dark gradient overlay sits on top of the blurred image */
+            header.masthead::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to bottom, rgba(92, 77, 66, 0.8) 0%, rgba(92, 77, 66, 0.8) 100%);
+                z-index: 1;
+            }
+            /* Keep all header content above both pseudo-elements */
+            header.masthead .container {
+                position: relative;
+                z-index: 2;
             }
         </style>
     </head>
