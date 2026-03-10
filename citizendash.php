@@ -1,3 +1,13 @@
+<?php
+
+// For local development and domain (show correct path for logo)
+if ($_SERVER['HTTP_HOST'] === 'localhost') {
+    $BASE_URL = '/';
+} else {
+    $BASE_URL = '/';
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
