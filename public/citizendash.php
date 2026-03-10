@@ -29,7 +29,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <!-- Dynamic background fix for localhost/domain compatibility -->
         <style>
             .masthead {
-                background-image: url('<?= $BASE_URL ?>assets/img/bg-masthead.jpg') !important;
+                background-image: url('<?= $BASE_URL ?>assets/img/memcir.jpg') !important;
             }
         </style>
     </head>
