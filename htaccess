@@ -1,0 +1,9 @@
+DirectoryIndex index.php citizendash.php
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^$ index.php [L]
+</IfModule>
