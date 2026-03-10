@@ -1,7 +1,7 @@
 <?php
-// Localhost vs domain path resolution (same pattern as other citizen pages)
+// Localhost vs domain path resolution
 if ($_SERVER['HTTP_HOST'] === 'localhost') {
-    $BASE_URL = '/LGU/infragovservices/public/';
+    $BASE_URL = '/Main LGU/public/';
 } else {
     $BASE_URL = '/public/';
 }
@@ -26,6 +26,12 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="<?= $BASE_URL ?>styles.css" rel="stylesheet" />
+        <!-- Dynamic background fix for localhost/domain compatibility -->
+        <style>
+            .masthead {
+                background-image: url('<?= $BASE_URL ?>assets/img/bg-masthead.jpg') !important;
+            }
+        </style>
     </head>
     <body id="page-top">
         <!-- Navigation-->
