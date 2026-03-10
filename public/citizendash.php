@@ -1,11 +1,3 @@
-<?php
-// For local development and domain (show correct path for logo)
-if ($_SERVER['HTTP_HOST'] === 'localhost') {
-    $BASE_URL = '/public/';
-} else {
-    $BASE_URL = '/public/';
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
