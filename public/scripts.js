@@ -85,15 +85,25 @@ window.addEventListener('DOMContentLoaded', event => {
     /* ── SimpleLightbox for gallery ────────────────────── */
     function initGallery() {
         if (typeof SimpleLightbox !== 'undefined') {
-            new SimpleLightbox({
+            var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+            var slb = new SimpleLightbox({
                 elements: '.db-gv2-item',
-                swipeTolerance: 50,        /* swipe distance to change image */
+                swipeTolerance: 50,
                 closeOnOverlayClick: true,
                 showCounter: true,
                 scrollZoom: false,
-                /* On mobile hide arrows — rely on swipe instead */
-                navText: window.innerWidth <= 768 ? ['', ''] : ['&#8249;', '&#8250;'],
+                navText: isTouchDevice ? ['', ''] : ['&#8249;', '&#8250;'],
             });
+
+            /* After each image opens, remove nav buttons on touch devices */
+            if (isTouchDevice) {
+                slb.on('shown.simplelightbox', function() {
+                    document.querySelectorAll('.sl-navigation, .sl-prev, .sl-next').forEach(function(el) {
+                        el.style.cssText = 'display:none!important;visibility:hidden!important;width:0!important;height:0!important;';
+                    });
+                });
+            }
         }
     }
 
