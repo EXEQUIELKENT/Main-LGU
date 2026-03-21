@@ -14,7 +14,8 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#050a19" id="metaThemeColor">
     <link rel="icon" href="<?= $OFFICIAL_LOGO ?>" type="image/png">
     <title>InfraGovServices – Infrastructure &amp; Utilities</title>
 
@@ -65,7 +66,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <a href="#dashAbout"   class="db-nav-link"        data-i18n="nav_about">About</a>
             <a href="#dashServices"class="db-nav-link"        data-i18n="nav_services">Services</a>
             <a href="#dashGallery" class="db-nav-link"        data-i18n="nav_gallery">Facilities</a>
-            <a href="#"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
+            <a href="privacy.php"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
         </nav>
 
         <!-- Right actions -->

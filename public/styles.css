@@ -14488,3 +14488,97 @@ html:not([data-theme="dark"]) .db-guide-dot.active {
     align-self: flex-start !important;
     margin: 0 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE NAVIGATION — Comprehensive cross-device fix
+   Ensures correct nav visibility on all screen sizes/browsers
+═══════════════════════════════════════════════════════════ */
+
+/* ── 1. Desktop nav default: always flex, hidden only on mobile ── */
+.db-nav {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* ── 2. Mobile bar default: hidden, only shown on mobile ── */
+.db-mobile-bar {
+    display: none !important;
+}
+
+/* ── 3. Sidebar + overlay: hidden by default ──────────── */
+.db-sidebar,
+.db-sidebar-overlay {
+    /* keep position:fixed but visibility is JS-controlled */
+}
+
+/* ── 4. Hard mobile breakpoint (≤ 1024px) ─────────────── */
+@media screen and (max-width: 1024px) {
+    .db-nav {
+        display: none !important;
+    }
+    .db-mobile-bar {
+        display: flex !important;
+        align-items: center !important;
+    }
+    /* Push page content below mobile bar */
+    body.dash-page main,
+    .dash-main {
+        padding-top: 0 !important;
+    }
+    /* Hero section top padding accounts for 54px mobile bar */
+    .db-hero-content {
+        padding-top: clamp(80px,14vh,120px) !important;
+    }
+}
+
+/* ── 5. Desktop only (> 1024px) ──────────────────────── */
+@media screen and (min-width: 1025px) {
+    .db-nav {
+        display: flex !important;
+    }
+    .db-mobile-bar {
+        display: none !important;
+    }
+    .db-sidebar {
+        display: none !important;
+    }
+    .db-sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* ── 6. Backdrop-filter fallback for older Android/browsers ── */
+@supports not (backdrop-filter: blur(1px)) {
+    .db-nav {
+        background: rgba(5,10,25,.97) !important;
+    }
+    .db-mobile-bar {
+        background: rgba(5,10,25,.97) !important;
+    }
+    html:not([data-theme="dark"]) .db-nav {
+        background: rgba(240,244,255,.99) !important;
+    }
+    html:not([data-theme="dark"]) .db-mobile-bar {
+        background: rgba(240,244,255,.99) !important;
+    }
+    .db-lang-pill,
+    .db-btn-ghost,
+    .db-bento-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+
+/* ── 7. Ensure mobile bar internal layout is always flex ── */
+.db-mobile-bar > *,
+.db-mobile-bar-actions {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* ── 8. Prevent old Creative theme nav from bleeding through ── */
+.dash-nav,
+.dash-mobile-top-nav,
+#mainNav {
+    display: none !important;
+}

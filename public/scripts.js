@@ -205,6 +205,9 @@ window.addEventListener('DOMContentLoaded', event => {
             /* Update toggle switch track visual */
             var track = document.querySelector('.db-theme-track');
             if (track) track.classList.toggle('is-dark', isDark);
+            /* Update browser chrome theme-color */
+            var tcMeta = document.getElementById('metaThemeColor');
+            if (tcMeta) tcMeta.setAttribute('content', isDark ? '#050a19' : '#f0f4ff');
 
             /* Update sidebar label */
             var sLbl = document.getElementById('dashSidebarLangLabel');
