@@ -66,7 +66,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <a href="#dashAbout"   class="db-nav-link"        data-i18n="nav_about">About</a>
             <a href="#dashServices"class="db-nav-link"        data-i18n="nav_services">Services</a>
             <a href="#dashGallery" class="db-nav-link"        data-i18n="nav_gallery">Facilities</a>
-            <a href="privacy.php"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
+            <a href="#"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
         </nav>
 
         <!-- Right actions -->
