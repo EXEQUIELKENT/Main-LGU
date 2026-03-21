@@ -46,43 +46,27 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
     <!-- ★ Critical inline overrides — always wins over linked CSS -->
     <style>
-        /* ── Hero: reduce height on mobile so content isn't buried ── */
+        /* Hero: exact top spacing on mobile = mobile bar height + small gap */
         @media screen and (max-width:1024px) {
-            .dash-hero {
-                min-height: 60vh !important;
-            }
             .db-hero-content {
-                padding-top:    20px !important;
-                padding-bottom: 36px !important;
+                padding-top:    78px !important;
+                padding-bottom: 40px !important;
             }
         }
         @media screen and (max-width:640px) {
-            .dash-hero {
-                min-height: 55vh !important;
-            }
             .db-hero-content {
-                padding-top:  16px !important;
+                padding-top:  74px !important;
                 padding-left: 18px !important;
                 padding-right:18px !important;
-                padding-bottom:32px !important;
             }
         }
-        /* ── Lightbox: absolutely hide arrows on touch/mobile ── */
+        /* Lightbox: no arrows on touch screens */
         @media (hover:none),(pointer:coarse) {
-            .sl-wrapper .sl-navigation,
-            .sl-wrapper .sl-navigation .sl-prev,
-            .sl-wrapper .sl-navigation .sl-next,
-            .sl-wrapper button.sl-prev,
-            .sl-wrapper button.sl-next,
-            .sl-prev, .sl-next {
+            .sl-prev,.sl-next,.sl-navigation,
+            .sl-navigation .sl-prev,.sl-navigation .sl-next,
+            button.sl-prev,button.sl-next {
                 display:none !important;
-                width:0 !important;
-                height:0 !important;
-                opacity:0 !important;
                 visibility:hidden !important;
-                pointer-events:none !important;
-                position:absolute !important;
-                overflow:hidden !important;
             }
         }
     </style>
