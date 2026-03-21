@@ -14641,3 +14641,67 @@ html:not([data-theme="dark"]) .db-guide-dot.active {
     70%  { opacity: 1 }
     100% { opacity: 0 }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ★ DEFINITIVE FINAL OVERRIDES — placed last to win cascade
+═══════════════════════════════════════════════════════════ */
+
+/* ── HERO mobile top gap — single source of truth ───────── */
+/* Targets every mobile breakpoint used across this file     */
+@media screen and (max-width: 1024px) {
+    body.dash-page .dash-hero .db-hero-content,
+    body .dash-hero .db-hero-content,
+    .db-hero-content {
+        padding-top:    78px !important;   /* 54px bar + 24px gap */
+        padding-bottom: 40px !important;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    body.dash-page .dash-hero .db-hero-content,
+    body .dash-hero .db-hero-content,
+    .db-hero-content {
+        padding-top:    74px !important;   /* 54px bar + 20px gap */
+        padding-left:   18px !important;
+        padding-right:  18px !important;
+        padding-bottom: 36px !important;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    body.dash-page .dash-hero .db-hero-content,
+    .db-hero-content {
+        padding-top:  70px !important;
+        padding-left: 16px !important;
+        padding-right:16px !important;
+    }
+}
+
+/* ── LIGHTBOX arrows — hide on all touch devices ─────────── */
+/* SimpleLightbox 2.x injects these into <body>              */
+@media (hover: none) {
+    .sl-prev, .sl-next,
+    .sl-navigation,
+    .sl-navigation .sl-prev,
+    .sl-navigation .sl-next,
+    button.sl-prev,
+    button.sl-next {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+}
+@media (pointer: coarse) {
+    .sl-prev, .sl-next,
+    .sl-navigation,
+    .sl-navigation .sl-prev,
+    .sl-navigation .sl-next,
+    button.sl-prev,
+    button.sl-next {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+}

@@ -43,6 +43,33 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         }
     })();
     </script>
+
+    <!-- ★ Critical inline overrides — always wins over linked CSS -->
+    <style>
+        /* Hero: exact top spacing on mobile = mobile bar height + small gap */
+        @media screen and (max-width:1024px) {
+            .db-hero-content {
+                padding-top:    78px !important;
+                padding-bottom: 40px !important;
+            }
+        }
+        @media screen and (max-width:640px) {
+            .db-hero-content {
+                padding-top:  74px !important;
+                padding-left: 18px !important;
+                padding-right:18px !important;
+            }
+        }
+        /* Lightbox: no arrows on touch screens */
+        @media (hover:none),(pointer:coarse) {
+            .sl-prev,.sl-next,.sl-navigation,
+            .sl-navigation .sl-prev,.sl-navigation .sl-next,
+            button.sl-prev,button.sl-next {
+                display:none !important;
+                visibility:hidden !important;
+            }
+        }
+    </style>
 </head>
 <body class="dash-page" id="page-top">
 
@@ -66,7 +93,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <a href="#dashAbout"   class="db-nav-link"        data-i18n="nav_about">About</a>
             <a href="#dashServices"class="db-nav-link"        data-i18n="nav_services">Services</a>
             <a href="#dashGallery" class="db-nav-link"        data-i18n="nav_gallery">Facilities</a>
-            <a href="#"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
+            <a href="privacy.php"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
         </nav>
 
         <!-- Right actions -->
