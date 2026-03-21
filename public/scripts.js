@@ -85,7 +85,15 @@ window.addEventListener('DOMContentLoaded', event => {
     /* ── SimpleLightbox for gallery ────────────────────── */
     function initGallery() {
         if (typeof SimpleLightbox !== 'undefined') {
-            new SimpleLightbox({ elements: '.db-gv2-item' });
+            new SimpleLightbox({
+                elements: '.db-gv2-item',
+                swipeTolerance: 50,        /* swipe distance to change image */
+                closeOnOverlayClick: true,
+                showCounter: true,
+                scrollZoom: false,
+                /* On mobile hide arrows — rely on swipe instead */
+                navText: window.innerWidth <= 768 ? ['', ''] : ['&#8249;', '&#8250;'],
+            });
         }
     }
 

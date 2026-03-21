@@ -14582,3 +14582,62 @@ html:not([data-theme="dark"]) .db-guide-dot.active {
 #mainNav {
     display: none !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   HERO — tighten top spacing on mobile (eyebrow too far down)
+   Lightbox — hide nav arrows on touch devices
+═══════════════════════════════════════════════════════════ */
+
+/* ── Hero mobile top padding ────────────────────────────── */
+/* The mobile bar is 54px tall; hero content was getting    */
+/* 80–120px extra which pushed the eyebrow too far down.    */
+@media screen and (max-width: 1024px) {
+    .db-hero-content {
+        padding-top: calc(54px + 24px) !important; /* bar height + small breathing room */
+        padding-bottom: 40px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .db-hero-content {
+        padding-top: calc(54px + 16px) !important;
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+    .db-hero-eyebrow { font-size: .62rem !important; letter-spacing: 2px !important }
+    .db-hero-h1      { font-size: clamp(2rem,8vw,2.8rem) !important; letter-spacing: -1px !important }
+}
+
+/* ── SimpleLightbox — hide arrows on touch/mobile ────────── */
+@media (hover: none), (pointer: coarse) {
+    /* Devices that use touch — hide prev/next arrow buttons */
+    .sl-navigation button,
+    .sl-prev,
+    .sl-next {
+        display: none !important;
+    }
+    /* Show a subtle swipe hint indicator instead */
+    .sl-wrapper .sl-image::after {
+        content: '← swipe →';
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,.55);
+        color: rgba(255,255,255,.75);
+        font-size: .7rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        padding: 5px 14px;
+        border-radius: 50px;
+        pointer-events: none;
+        opacity: 1;
+        animation: slHintFade 2.5s ease 1s forwards;
+    }
+}
+
+@keyframes slHintFade {
+    0%   { opacity: 1 }
+    70%  { opacity: 1 }
+    100% { opacity: 0 }
+}
