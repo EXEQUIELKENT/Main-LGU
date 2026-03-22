@@ -46,31 +46,8 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
     <!-- ★ Critical inline overrides — always wins over linked CSS -->
     <style>
-        /* ── Hero: full screen height on mobile, content centered vertically ── */
-        @media screen and (max-width:1024px) {
-            body .dash-hero,
-            body.dash-page .dash-hero {
-                min-height: 100svh !important;
-                min-height: 100dvh !important;
-                min-height: 100vh !important;
-                justify-content: center !important;
-            }
-            body .dash-hero .db-hero-content,
-            body.dash-page .dash-hero .db-hero-content {
-                padding-top:    76px !important;
-                padding-bottom: 40px !important;
-            }
-        }
+        /* ── Hero mobile content: center and pad below navbar ── */
         @media screen and (max-width:640px) {
-            body .dash-hero,
-            body.dash-page .dash-hero {
-                min-height: 100svh !important;
-                min-height: 100dvh !important;
-                min-height: 100vh !important;
-                justify-content: center !important;
-            }
-            body .dash-hero .db-hero-content,
-            body.dash-page .dash-hero .db-hero-content,
             .db-hero-content {
                 padding-top:  70px !important;
                 padding-left: 18px !important;

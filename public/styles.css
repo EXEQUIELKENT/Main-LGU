@@ -11274,10 +11274,26 @@ body.dash-page::-webkit-scrollbar-thumb { background:var(--db-blue);border-radiu
     min-height:100vh;
     display:flex !important;
     flex-direction:column !important;
-    justify-content:flex-end !important;
+    justify-content:center !important;
     padding:0 !important;
     text-align:left !important;
     overflow:hidden;
+}
+/* Desktop: push content to bottom (original behaviour) */
+@media screen and (min-width:1025px) {
+    .dash-hero {
+        justify-content:flex-end !important;
+        min-height:100vh !important;
+    }
+}
+/* Mobile: full screen, content centered */
+@media screen and (max-width:1024px) {
+    .dash-hero {
+        min-height:100svh !important;
+        min-height:100dvh !important;
+        min-height:100vh !important;
+        justify-content:center !important;
+    }
 }
 
 /* The background photo already comes from body.dash-page — we just need an overlay */
