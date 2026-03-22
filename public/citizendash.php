@@ -46,27 +46,89 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
     <!-- ★ Critical inline overrides — always wins over linked CSS -->
     <style>
-        /* Hero: exact top spacing on mobile = mobile bar height + small gap */
+        /* ── Hero: full screen height on mobile, content centered vertically ── */
         @media screen and (max-width:1024px) {
+            .dash-hero {
+                min-height: 100dvh !important;
+                min-height: 100vh !important;
+                justify-content: center !important;
+            }
             .db-hero-content {
-                padding-top:    78px !important;
+                padding-top:    80px !important;
                 padding-bottom: 40px !important;
             }
         }
         @media screen and (max-width:640px) {
+            .dash-hero {
+                min-height: 100dvh !important;
+                min-height: 100vh !important;
+                justify-content: center !important;
+            }
             .db-hero-content {
-                padding-top:  74px !important;
+                padding-top:  70px !important;
                 padding-left: 18px !important;
                 padding-right:18px !important;
+                padding-bottom:40px !important;
+                text-align: center !important;
+                align-items: center !important;
+                max-width: 100% !important;
+            }
+            .db-hero-eyebrow,
+            .db-hero-h1,
+            .db-hero-sub {
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            .db-hero-eyebrow::before { display: none !important; }
+            .db-hero-pills {
+                justify-content: center !important;
+            }
+            .db-hero-cta {
+                justify-content: center !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                width: 100% !important;
+                gap: 10px !important;
+                flex-wrap: nowrap !important;
+            }
+            .db-btn-solid,
+            .db-btn-ghost {
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
+                max-width: 200px !important;
+                justify-content: center !important;
+                padding: 12px 16px !important;
+                font-size: .82rem !important;
+                white-space: nowrap !important;
             }
         }
-        /* Lightbox: no arrows on touch screens */
+        /* Portrait phones with long height (aspect ratio taller than 16:9) */
+        @media screen and (max-width:480px) and (min-aspect-ratio:9/17) {
+            .db-hero-content {
+                text-align: center !important;
+                align-items: center !important;
+            }
+            .db-hero-pills  { justify-content: center !important; }
+            .db-hero-cta    { justify-content: center !important; align-items: center !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 10px !important; }
+            .db-btn-solid, .db-btn-ghost { flex:1 1 0 !important; min-width:0 !important; max-width:200px !important; padding:11px 14px !important; font-size:.82rem !important; justify-content:center !important; white-space:nowrap !important; }
+        }
+        /* ── Lightbox: absolutely hide arrows on touch/mobile ── */
         @media (hover:none),(pointer:coarse) {
-            .sl-prev,.sl-next,.sl-navigation,
-            .sl-navigation .sl-prev,.sl-navigation .sl-next,
-            button.sl-prev,button.sl-next {
+            .sl-wrapper .sl-navigation,
+            .sl-wrapper .sl-navigation .sl-prev,
+            .sl-wrapper .sl-navigation .sl-next,
+            .sl-wrapper button.sl-prev,
+            .sl-wrapper button.sl-next,
+            .sl-prev, .sl-next {
                 display:none !important;
+                width:0 !important;
+                height:0 !important;
+                opacity:0 !important;
                 visibility:hidden !important;
+                pointer-events:none !important;
+                position:absolute !important;
+                overflow:hidden !important;
             }
         }
     </style>
