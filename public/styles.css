@@ -14705,3 +14705,32 @@ html:not([data-theme="dark"]) .db-guide-dot.active {
         visibility: hidden !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   HERO — final definitive mobile override (highest specificity)
+   body selector beats any .dash-hero !important in linked CSS
+═══════════════════════════════════════════════════════════ */
+@media screen and (max-width: 1024px) {
+    body .dash-hero,
+    body.dash-page .dash-hero {
+        min-height: 100svh !important;
+        min-height: 100dvh !important;
+        min-height: 100vh  !important;
+        justify-content: center !important;
+    }
+    body .dash-hero .db-hero-content {
+        padding-top: 76px !important;
+    }
+}
+@media screen and (max-width: 640px) {
+    body .dash-hero,
+    body.dash-page .dash-hero {
+        min-height: 100svh !important;
+        min-height: 100dvh !important;
+        min-height: 100vh  !important;
+        justify-content: center !important;
+    }
+    body .dash-hero .db-hero-content {
+        padding-top: 70px !important;
+    }
+}

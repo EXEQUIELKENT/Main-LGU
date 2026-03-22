@@ -48,22 +48,29 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
     <style>
         /* ── Hero: full screen height on mobile, content centered vertically ── */
         @media screen and (max-width:1024px) {
-            .dash-hero {
+            body .dash-hero,
+            body.dash-page .dash-hero {
+                min-height: 100svh !important;
                 min-height: 100dvh !important;
                 min-height: 100vh !important;
                 justify-content: center !important;
             }
-            .db-hero-content {
-                padding-top:    80px !important;
+            body .dash-hero .db-hero-content,
+            body.dash-page .dash-hero .db-hero-content {
+                padding-top:    76px !important;
                 padding-bottom: 40px !important;
             }
         }
         @media screen and (max-width:640px) {
-            .dash-hero {
+            body .dash-hero,
+            body.dash-page .dash-hero {
+                min-height: 100svh !important;
                 min-height: 100dvh !important;
                 min-height: 100vh !important;
                 justify-content: center !important;
             }
+            body .dash-hero .db-hero-content,
+            body.dash-page .dash-hero .db-hero-content,
             .db-hero-content {
                 padding-top:  70px !important;
                 padding-left: 18px !important;
