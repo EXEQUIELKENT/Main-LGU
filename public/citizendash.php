@@ -24,7 +24,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css">
 
     <!-- Main stylesheet: Bootstrap Creative + citizendash custom styles -->
-    <link rel="stylesheet" href="<?= $BASE_URL ?>styles.css">
+    <link rel="stylesheet" href="<?= $BASE_URL ?>styles.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $BASE_URL . 'styles.css') ?>">
 
     <!-- Background image (PHP-injected path, must stay inline) -->
     <style>
@@ -851,7 +851,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js"></script>
 
 <!-- Main scripts: Creative theme base + all citizendash features -->
-<script src="<?= $BASE_URL ?>scripts.js"></script>
+<script src="<?= $BASE_URL ?>scripts.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $BASE_URL . 'scripts.js') ?>"></script>
 
 </body>
 </html>
