@@ -265,6 +265,9 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                 <a href="https://rtm.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
                     <span data-i18n="pill_rtm">Roads</span> <span class="db-pill-count">RTM</span>
                 </a>
+                <a href="https://UPaD.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
+                    <span>Urban Planning</span> <span class="db-pill-count">UPaD</span>
+                </a>
             </div>
 
             <div class="db-hero-cta">
@@ -316,6 +319,11 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                     <span>Energy Efficiency &amp; Conservation</span>
                     <span class="db-ticker-code">(ECM)</span>
                 </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-map"></i></span>
+                    <span>Urban Planning and Development</span>
+                    <span class="db-ticker-code">(UPaD)</span>
+                </div>
                 <!-- Set 2 (duplicate for seamless loop) -->
                 <div class="db-ticker-item">
                     <span class="db-ticker-badge db-ticker-badge--blue"><i class="fas fa-hard-hat"></i></span>
@@ -347,6 +355,11 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                     <span>Energy Efficiency &amp; Conservation</span>
                     <span class="db-ticker-code">(ECM)</span>
                 </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-map"></i></span>
+                    <span>Urban Planning and Development</span>
+                    <span class="db-ticker-code">(UPaD)</span>
+                </div>
             </div>
         </div>
     </section>
@@ -357,7 +370,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <div class="db-metric-card dash-aos dash-delay-1">
                 <div class="db-metric-icon"><i class="fas fa-building"></i></div>
                 <div class="db-metric-body">
-                    <div class="db-metric-num">6</div>
+                    <div class="db-metric-num">7</div>
                     <div class="db-metric-label" data-i18n="stat_depts">Active Departments</div>
                     <div class="db-metric-sub" data-i18n="stat_depts_sub">City-wide infrastructure coverage</div>
                 </div>
@@ -598,6 +611,26 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                     <p  class="db-svc3-desc"  data-i18n="svc6_desc">Implementing sustainable energy practices and city-wide conservation programs.</p>
                 </div>
                 <a class="db-svc3-btn" href="https://energy.infragovservices.com/" target="_blank" rel="noopener noreferrer">
+                    <span data-i18n="svc_visit">Visit Department</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <div class="db-svc3-shimmer"></div>
+                <div class="db-svc3-border-anim"></div>
+            </div>
+
+            <!-- Card 7 — amber -->
+            <div class="db-svc3-card db-svc3-amber dash-aos dash-delay-1" id="dashSvcCard7">
+                <div class="db-svc3-bg-num">07</div>
+                <div class="db-svc3-orb"></div>
+                <div class="db-svc3-top">
+                    <div class="db-svc3-chip"><i class="fas fa-map"></i></div>
+                    <span class="db-svc3-tag">UPaD</span>
+                </div>
+                <div class="db-svc3-body">
+                    <h3 class="db-svc3-title">Urban Planning and Development</h3>
+                    <p  class="db-svc3-desc">Zoning, architectural reviews, and long-term city growth strategies.</p>
+                </div>
+                <a class="db-svc3-btn" href="https://UPaD.infragovservices.com/" target="_blank" rel="noopener noreferrer">
                     <span data-i18n="svc_visit">Visit Department</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>

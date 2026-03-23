@@ -13597,6 +13597,11 @@ html:not([data-theme="dark"]) .db-bento-card  { border-color: rgba(15,23,42,.08)
     margin: 0 auto;
 }
 
+/* Center a lone card on the last row (7th item in a 3-col grid) */
+.db-svc-v3-grid > .db-svc3-card:last-child:nth-child(3n+1) {
+    grid-column: 2;
+}
+
 /* ── Base card ──────────────────────────────────────────── */
 .db-svc3-card {
     position: relative;
@@ -13628,6 +13633,7 @@ html:not([data-theme="dark"]) .db-bento-card  { border-color: rgba(15,23,42,.08)
 .db-svc3-purple { background: linear-gradient(145deg, #1e0b4a 0%, #4c1f8f 55%, #7c3fd4 100%) }
 .db-svc3-rose   { background: linear-gradient(145deg, #3a0020 0%, #8b0045 55%, #c8185a 100%) }
 .db-svc3-teal   { background: linear-gradient(145deg, #003030 0%, #0a5f5f 55%, #0d9e9e 100%) }
+.db-svc3-amber  { background: linear-gradient(145deg, #2d1500 0%, #7a3b00 55%, #c47b0a 100%) }
 
 /* Hover lifts + glow matching card accent */
 .db-svc3-blue:hover   { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 60px rgba(30,86,200,.55);  border-color:rgba(59,130,246,.5) }
@@ -13636,6 +13642,7 @@ html:not([data-theme="dark"]) .db-bento-card  { border-color: rgba(15,23,42,.08)
 .db-svc3-purple:hover { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 60px rgba(124,63,212,.55); border-color:rgba(167,139,250,.5) }
 .db-svc3-rose:hover   { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 60px rgba(200,24,90,.55);  border-color:rgba(251,113,133,.5) }
 .db-svc3-teal:hover   { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 60px rgba(13,158,158,.55); border-color:rgba(45,212,191,.5) }
+.db-svc3-amber:hover  { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 60px rgba(196,123,10,.55); border-color:rgba(251,191,36,.5) }
 
 /* ── Ambient orb ────────────────────────────────────────── */
 .db-svc3-orb {
@@ -13656,6 +13663,7 @@ html:not([data-theme="dark"]) .db-bento-card  { border-color: rgba(15,23,42,.08)
 .db-svc3-purple .db-svc3-orb { background: #a78bfa }
 .db-svc3-rose   .db-svc3-orb { background: #fb7185 }
 .db-svc3-teal   .db-svc3-orb { background: #2dd4bf }
+.db-svc3-amber  .db-svc3-orb { background: #fbbf24 }
 .db-svc3-card:hover .db-svc3-orb { opacity: .36; transform: translateY(-50%) scale(1.1) }
 
 /* ── Large background number ────────────────────────────── */
@@ -13799,6 +13807,7 @@ html:not([data-theme="dark"]) .db-bento-card  { border-color: rgba(15,23,42,.08)
 .db-svc3-purple .db-svc3-border-anim { box-shadow: inset 0 0 0 1.5px rgba(167,139,250,.6) }
 .db-svc3-rose   .db-svc3-border-anim { box-shadow: inset 0 0 0 1.5px rgba(251,113,133,.6) }
 .db-svc3-teal   .db-svc3-border-anim { box-shadow: inset 0 0 0 1.5px rgba(45,212,191,.6) }
+.db-svc3-amber  .db-svc3-border-anim { box-shadow: inset 0 0 0 1.5px rgba(251,191,36,.6) }
 .db-svc3-card:hover .db-svc3-border-anim { opacity: 1 }
 
 /* ── Responsive ─────────────────────────────────────────── */
