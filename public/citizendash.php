@@ -619,7 +619,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             </div>
 
             <!-- Card 7 — amber -->
-            <div class="db-svc3-card db-svc3-amber dash-aos dash-delay-1" id="dashSvcCard7">
+            <div class="db-svc3-card db-svc3-amber dash-aos dash-delay-1" id="dashSvcCard7" style="background: linear-gradient(145deg, #3d2000 0%, #a05a00 50%, #d4920a 100%) !important;">
                 <div class="db-svc3-bg-num">07</div>
                 <div class="db-svc3-orb"></div>
                 <div class="db-svc3-top">
