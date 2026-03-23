@@ -279,19 +279,74 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
         <!-- Scrolling ticker -->
         <div class="db-ticker-bar">
+            <!-- Left fade mask -->
+            <div class="db-ticker-fade db-ticker-fade--left"></div>
+            <!-- Right fade mask -->
+            <div class="db-ticker-fade db-ticker-fade--right"></div>
+
             <div class="db-ticker-track">
-                <div class="db-ticker-item">Infrastructure Project Management</div>
-                <div class="db-ticker-item">Utilities Billing &amp; Management</div>
-                <div class="db-ticker-item">Road &amp; Transportation</div>
-                <div class="db-ticker-item">Public Facilities Reservation</div>
-                <div class="db-ticker-item">Community Infrastructure Maintenance</div>
-                <div class="db-ticker-item">Energy Efficiency &amp; Conservation</div>
-                <div class="db-ticker-item">Infrastructure Project Management</div>
-                <div class="db-ticker-item">Utilities Billing &amp; Management</div>
-                <div class="db-ticker-item">Road &amp; Transportation</div>
-                <div class="db-ticker-item">Public Facilities Reservation</div>
-                <div class="db-ticker-item">Community Infrastructure Maintenance</div>
-                <div class="db-ticker-item">Energy Efficiency &amp; Conservation</div>
+                <!-- Set 1 -->
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--blue"><i class="fas fa-hard-hat"></i></span>
+                    <span>Infrastructure Project Management</span>
+                    <span class="db-ticker-code">(IPMS)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--teal"><i class="fas fa-bolt"></i></span>
+                    <span>Utilities Billing &amp; Management</span>
+                    <span class="db-ticker-code">(UMAN)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-road"></i></span>
+                    <span>Road &amp; Transportation</span>
+                    <span class="db-ticker-code">(RTM)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--purple"><i class="fas fa-landmark"></i></span>
+                    <span>Public Facilities Reservation</span>
+                    <span class="db-ticker-code">(CPRF)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--green"><i class="fas fa-tools"></i></span>
+                    <span>Community Infrastructure Maintenance</span>
+                    <span class="db-ticker-code">(CIMM)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--coral"><i class="fas fa-leaf"></i></span>
+                    <span>Energy Efficiency &amp; Conservation</span>
+                    <span class="db-ticker-code">(ECM)</span>
+                </div>
+                <!-- Set 2 (duplicate for seamless loop) -->
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--blue"><i class="fas fa-hard-hat"></i></span>
+                    <span>Infrastructure Project Management</span>
+                    <span class="db-ticker-code">(IPMS)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--teal"><i class="fas fa-bolt"></i></span>
+                    <span>Utilities Billing &amp; Management</span>
+                    <span class="db-ticker-code">(UMAN)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-road"></i></span>
+                    <span>Road &amp; Transportation</span>
+                    <span class="db-ticker-code">(RTM)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--purple"><i class="fas fa-landmark"></i></span>
+                    <span>Public Facilities Reservation</span>
+                    <span class="db-ticker-code">(CPRF)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--green"><i class="fas fa-tools"></i></span>
+                    <span>Community Infrastructure Maintenance</span>
+                    <span class="db-ticker-code">(CIMM)</span>
+                </div>
+                <div class="db-ticker-item">
+                    <span class="db-ticker-badge db-ticker-badge--coral"><i class="fas fa-leaf"></i></span>
+                    <span>Energy Efficiency &amp; Conservation</span>
+                    <span class="db-ticker-code">(ECM)</span>
+                </div>
             </div>
         </div>
     </section>
