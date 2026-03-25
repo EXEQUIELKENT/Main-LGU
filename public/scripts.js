@@ -305,6 +305,7 @@ window.addEventListener('DOMContentLoaded', event => {
             guide_svc4_title:'🏟️ Public Facilities Reservation', guide_svc4_desc:'Card <b>04 — CPRF</b>: Book community centers, parks, and sports fields for events and public use.',
             guide_svc5_title:'🔧 Community Infrastructure Maintenance', guide_svc5_desc:'Card <b>05 — CIMM</b>: Coordinates repairs and upkeep for all public assets, roads, and safety systems.',
             guide_svc6_title:'🌿 Energy Efficiency & Conservation', guide_svc6_desc:'Card <b>06 — ECM</b>: Implements sustainable energy practices and city-wide conservation programmes.',
+            guide_svc7_title:'🗺️ Urban Planning and Development', guide_svc7_desc:'Card <b>07 — UPaD</b>: Manages zoning, architectural reviews, and long-term city growth strategies across Quezon City.',
             guide_gallery_desc:'Browse Quezon City\'s six landmark public facilities. <b>Click any photo</b> to view it full-screen with the lightbox viewer.',
             guide_footer_desc:'Quick links at the bottom of the page — <b>Quick Links</b>, department shortcuts, and <b>Legal</b> pages like Privacy Policy and Terms of Service.',
         },
@@ -377,6 +378,7 @@ window.addEventListener('DOMContentLoaded', event => {
             guide_svc4_title:'🏟️ Reserbasyon ng Pampublikong Pasilidad', guide_svc4_desc:'Card <b>04 — CPRF</b>: Mag-book ng mga community center, parke, at sports field para sa mga aktibidad at pampublikong paggamit.',
             guide_svc5_title:'🔧 Pagpapanatili ng Imprastraktura ng Komunidad', guide_svc5_desc:'Card <b>05 — CIMM</b>: Nag-coordinate ng mga pagkukumpuni at pagpapanatili ng lahat ng pampublikong asset at sistema ng kaligtasan.',
             guide_svc6_title:'🌿 Kahusayan at Pag-iingat ng Enerhiya', guide_svc6_desc:'Card <b>06 — ECM</b>: Nagpapatupad ng mga napapanatiling gawi sa enerhiya at programa ng konserbasyon sa buong lungsod.',
+            guide_svc7_title:'🗺️ Pagpaplano at Pagpapaunlad ng Lungsod', guide_svc7_desc:'Card <b>07 — UPaD</b>: Namamahala ng zoning, architectural reviews, at pangmatagalang estratehiya sa paglago ng Quezon City.',
             guide_gallery_desc:'I-browse ang anim na pangunahing pampublikong pasilidad ng Quezon City. <b>I-click ang anumang larawan</b> para makita ito sa full-screen.',
             guide_footer_desc:'Mga mabilis na link sa ibaba — <b>Mabilis na Mga Link</b>, mga shortcut ng departamento, at <b>Legal</b> na mga pahina.',
         }
@@ -474,6 +476,7 @@ window.addEventListener('DOMContentLoaded', event => {
             { tKey:'guide_svc4_title',    dKey:'guide_svc4_desc',   sel:'#dashSvcCard4',    pad:10 },
             { tKey:'guide_svc5_title',    dKey:'guide_svc5_desc',   sel:'#dashSvcCard5',    pad:10 },
             { tKey:'guide_svc6_title',    dKey:'guide_svc6_desc',   sel:'#dashSvcCard6',    pad:10 },
+            { tKey:'guide_svc7_title',    dKey:'guide_svc7_desc',   sel:'#dashSvcCard7',    pad:10 },
             { tKey:'guide_gallery_title', dKey:'guide_gallery_desc',sel:'#dashGalleryItem1', pad:12 },
             { tKey:'guide_footer_title',  dKey:'guide_footer_desc', sel:'#dashFooter',      pad:8  },
         ];

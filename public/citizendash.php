@@ -820,7 +820,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
     </div>
     <!-- Header -->
     <div class="db-guide-header">
-        <div class="db-guide-step-badge" id="dashGuideStepNum">Step 1 of 13</div>
+        <div class="db-guide-step-badge" id="dashGuideStepNum">Step 1 of 14</div>
         <button class="db-guide-close" id="dashGuideCloseBtn" aria-label="Close guide">
             <svg viewBox="0 0 24 24" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
         </button>
