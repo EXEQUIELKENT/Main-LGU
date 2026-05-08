@@ -633,12 +633,11 @@ window.addEventListener('DOMContentLoaded', event => {
         if (!navLinks.length) return;
 
         /* Build a map: sectionId → navLink
-           href="#" and href="#dashHero" both map to the hero section */
+           href="#" maps to the hero section (top of page) */
         var sectionMap = []; // [{id, link}] ordered top→bottom
         navLinks.forEach(function (link) {
             var href = link.getAttribute('href') || '';
             if (href === '#' || href === '') {
-                /* Home → treat as #dashHero (top of page) */
                 sectionMap.push({ id: 'dashHero', link: link });
             } else if (href.charAt(0) === '#') {
                 var id = href.slice(1);
@@ -646,24 +645,63 @@ window.addEventListener('DOMContentLoaded', event => {
                     sectionMap.push({ id: id, link: link });
                 }
             }
-            /* External links (privacy.php) are skipped — no scroll tracking */
+            /* External links (e.g. privacy.php) are skipped */
         });
 
-        /* Helper: set one link active, clear others */
+        /* Helper: set one link active, clear all others */
         function setActive(activeLink) {
             navLinks.forEach(function (l) { l.classList.remove('active'); });
             if (activeLink) activeLink.classList.add('active');
         }
 
-        /* ── 1. Click: move active immediately ── */
+        /* Lock flag: while true the observer ignores intersection events.
+           This prevents intermediate sections from hijacking the active
+           pill during smooth-scroll triggered by a nav click. */
+        var scrollLocked = false;
+        var lockTimer    = null;
+
+        function lock(duration) {
+            scrollLocked = true;
+            clearTimeout(lockTimer);
+            lockTimer = setTimeout(function () {
+                scrollLocked = false;
+                /* Re-evaluate active pill based on current scroll position */
+                syncActiveToScroll();
+            }, duration || 800);
+        }
+
+        /* Determine which section owns the current scroll position and
+           set the matching pill active. Uses the section whose top edge
+           is the closest one at or above the viewport centre. */
+        function syncActiveToScroll() {
+            var mid = window.scrollY + window.innerHeight / 2;
+            var best = null, bestDist = Infinity;
+            sectionMap.forEach(function (item) {
+                var el = document.getElementById(item.id);
+                if (!el) return;
+                var top = el.getBoundingClientRect().top + window.scrollY;
+                if (top <= mid) {
+                    var dist = mid - top;
+                    if (dist < bestDist) { bestDist = dist; best = item; }
+                }
+            });
+            if (best) setActive(best.link);
+        }
+
+        /* ── 1. Click: lock observer → set active immediately ── */
         navLinks.forEach(function (link) {
             link.addEventListener('click', function () {
-                setActive(link);
+                /* Only lock + override for same-page anchor links */
+                var href = link.getAttribute('href') || '';
+                if (href === '#' || href.charAt(0) === '#') {
+                    lock(900); /* hold off observer for ~900 ms (covers typical smooth-scroll) */
+                    setActive(link);
+                }
             });
         });
 
-        /* ── 2. Scroll: IntersectionObserver tracks which section is
-                 most visible and updates the pill accordingly ── */
+        /* ── 2. Scroll: IntersectionObserver updates active pill,
+                 but only when not locked by a click ── */
         var visibleRatios = {};
         sectionMap.forEach(function (item) { visibleRatios[item.id] = 0; });
 
@@ -672,34 +710,24 @@ window.addEventListener('DOMContentLoaded', event => {
                 visibleRatios[entry.target.id] = entry.intersectionRatio;
             });
 
-            /* Find the section with the highest visibility ratio */
+            /* Skip while a nav click is controlling the active state */
+            if (scrollLocked) return;
+
+            /* Pick the most-visible section */
             var bestId = null, bestRatio = -1;
             sectionMap.forEach(function (item) {
                 var r = visibleRatios[item.id] || 0;
                 if (r > bestRatio) { bestRatio = r; bestId = item.id; }
             });
 
-            /* Fallback: if nothing is intersecting, find the section
-               whose top is closest above the viewport midpoint */
+            /* Fallback: nothing intersecting → use scroll position */
             if (!bestId || bestRatio === 0) {
-                var mid = window.scrollY + window.innerHeight / 2;
-                var closest = null, closestDist = Infinity;
-                sectionMap.forEach(function (item) {
-                    var el = document.getElementById(item.id);
-                    if (!el) return;
-                    var top = el.getBoundingClientRect().top + window.scrollY;
-                    if (top <= mid) {
-                        var dist = mid - top;
-                        if (dist < closestDist) { closestDist = dist; closest = item; }
-                    }
-                });
-                if (closest) bestId = closest.id;
+                syncActiveToScroll();
+                return;
             }
 
-            if (bestId) {
-                var match = sectionMap.find(function (item) { return item.id === bestId; });
-                if (match) setActive(match.link);
-            }
+            var match = sectionMap.find(function (item) { return item.id === bestId; });
+            if (match) setActive(match.link);
         }, {
             threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0],
             rootMargin: '0px 0px -20% 0px'
