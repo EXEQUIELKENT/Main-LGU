@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../includes/auth_gate.php';
+
 date_default_timezone_set('Asia/Manila');
 $serverTimestamp = time();
 
@@ -141,6 +143,9 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <a href="#dashServices"class="db-nav-link"        data-i18n="nav_services">Services</a>
             <a href="#dashGallery" class="db-nav-link"        data-i18n="nav_gallery">Facilities</a>
             <a href="privacy.php"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
+            <?php if ($show_login): ?>
+                <a href="../admin/login.php" class="db-nav-link">Log in</a>
+            <?php endif; ?>
         </nav>
 
         <!-- Right actions -->
@@ -194,6 +199,9 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <li><a href="#dashServices"><i class="fas fa-layer-group"></i><span data-i18n="nav_services">Services</span></a></li>
         <li><a href="#dashGallery"> <i class="fas fa-landmark"></i><span data-i18n="nav_gallery">Facilities</span></a></li>
         <li><a href="privacy.php">  <i class="fas fa-file-shield"></i><span data-i18n="nav_privacy">Privacy Policy</span></a></li>
+        <?php if ($show_login): ?>
+            <li><a href="../admin/login.php"><i class="fas fa-sign-in-alt"></i><span>Log in</span></a></li>
+        <?php endif; ?>
     </ul>
 
 </nav>
