@@ -7,9 +7,9 @@ function mainLguDb(): PDO
 
     if ($pdo === null) {
         $host = envValue('DB_HOST', 'localhost');
-        $name = envValue('DB_NAME', 'main_lgu');
-        $user = envValue('DB_USER', 'root');
-        $pass = envValue('DB_PASS', '');
+        $name = envValue('DB_NAME', 'infr_lgu');
+        $user = envValue('DB_USER', 'infr_root');
+        $pass = envValue('DB_PASS', '12345678');
 
         $pdo = new PDO(
             "mysql:host={$host};dbname={$name};charset=utf8mb4",
