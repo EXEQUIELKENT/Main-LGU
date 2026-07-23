@@ -1,0 +1,42 @@
+-- Main LGU: SSO hub database
+CREATE DATABASE IF NOT EXISTS main_lgu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE main_lgu;
+
+CREATE TABLE IF NOT EXISTS super_admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS connected_systems (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(30) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    base_url VARCHAR(255) NOT NULL,
+    admin_entry_path VARCHAR(255) NOT NULL,
+    sso_consume_path VARCHAR(255) NOT NULL,
+    shared_secret VARCHAR(64) NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sso_launch_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    super_admin_id INT NOT NULL,
+    system_slug VARCHAR(30) NOT NULL,
+    launched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45) DEFAULT NULL,
+    FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Seed the 5 connected systems (local XAMPP URLs; update base_url when deployed to *.infragovservices.com)
+INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, shared_secret, is_active) VALUES
+('roadmon', 'Road Monitoring (RGMAP)', 'http://localhost/lg-road-monitoring', '/pages/admin/admin_dashboard.php', '/lgu_staff/sso_consume.php', '98e6d66778fb43ef152d69caf81b793ecc55368b9ee8357eac64246e73c7e64e', 1),
+('ipms', 'IPMS', 'http://localhost/ipms_lgu', '/superadmin/dashboard.php', '/auth/sso_consume.php', 'f56d2000a6be7cde816cb174274824462644e2255e9ee39b4946d166a933e490', 1),
+('energy', 'Energy', 'http://localhost/Lgu1-energy', '/dashboard', '/sso/consume', '400f214e72c54090af8b91ede0c17a23bad10f298b60cfea55d546cb8a44752a', 1),
+('cprf', 'CPRF (Facilities Reservation)', 'http://localhost/facilities-reservation-system1', '/dashboard', '/sso/consume', '6724201881389f70d4d233dcd87caa15d507ebfd56f3fc73e0ad2b1c61e2d825', 1),
+('cimm', 'CIMM', 'http://localhost/LGU', '/lgu-portal/public/admin/employee.php', '/lgu-portal/public/admin/sso_consume.php', '4b846cf9286c6a7d2dbd099b4033552ed162b08559f93624f69d48e1029092a6', 1)
+ON DUPLICATE KEY UPDATE name = VALUES(name);
