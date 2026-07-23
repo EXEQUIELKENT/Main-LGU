@@ -1,5 +1,12 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    // Distinct cookie name so this session can never collide with (or be
+    // wiped by) a sibling system's own PHPSESSID cookie — e.g. on local
+    // XAMPP, every app shares the same "localhost" host and PHP's default
+    // session.cookie_path=/, so without this, logging out of CIMM's
+    // employee session (which also expires its PHPSESSID cookie) silently
+    // destroyed this admin session too, since both were sharing one cookie.
+    session_name('MAINLGU_ADMIN_SESSID');
     session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
 }
