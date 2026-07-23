@@ -1,6 +1,6 @@
 -- Main LGU: SSO hub database
-CREATE DATABASE IF NOT EXISTS main_lgu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE main_lgu;
+CREATE DATABASE IF NOT EXISTS infr_lgu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE infr_lgu;
 
 CREATE TABLE IF NOT EXISTS super_admins (
     id INT AUTO_INCREMENT PRIMARY KEY,
