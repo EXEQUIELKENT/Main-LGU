@@ -260,63 +260,115 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Admin Login — InfraGovServices</title>
 <link rel="icon" href="../public/logocityhall.png" type="image/png">
+<script>
+(function () {
+    try {
+        var t = localStorage.getItem('theme') || localStorage.getItem('theme_backup') || 'light';
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (e) {}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-    :root { color-scheme: dark; }
+    :root {
+        --bg-scrim: linear-gradient(160deg, rgba(238,241,251,.93) 0%, rgba(245,247,253,.90) 55%, rgba(255,255,255,.88) 100%);
+        --card-bg: rgba(255,255,255,.82);
+        --card-border: rgba(80,100,180,.18);
+        --text-primary: #101a3a;
+        --text-secondary: #5b6690;
+        --input-bg: rgba(255,255,255,.7);
+        --input-border: rgba(80,100,180,.24);
+        --input-placeholder: #8992b8;
+    }
+    [data-theme="dark"] {
+        --bg-scrim: linear-gradient(160deg, rgba(5,10,25,.90) 0%, rgba(10,22,40,.87) 55%, rgba(13,31,60,.85) 100%);
+        --card-bg: rgba(15,22,48,.72);
+        --card-border: rgba(120,140,220,.18);
+        --text-primary: #fff;
+        --text-secondary: #8b95c0;
+        --input-bg: rgba(6,12,30,.55);
+        --input-border: rgba(120,140,220,.22);
+        --input-placeholder: #5b6690;
+    }
     * { box-sizing: border-box; }
     body {
         margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
         font-family: 'Poppins', system-ui, sans-serif;
-        background:
-            radial-gradient(ellipse 900px 600px at 15% 10%, rgba(79,110,247,.20), transparent 60%),
-            radial-gradient(ellipse 700px 500px at 90% 90%, rgba(59,130,246,.14), transparent 55%),
-            linear-gradient(160deg, #050a19 0%, #0a1628 55%, #0d1f3c 100%);
-        overflow: hidden;
+        background-image: var(--bg-scrim), url('../public/assets/img/memcir.jpg');
+        background-size: cover, cover;
+        background-position: center, center;
+        background-attachment: fixed, fixed;
         position: relative;
         padding: 24px;
+        transition: color .3s;
     }
-    body::before {
-        content: ''; position: absolute; inset: 0; pointer-events: none;
-        background-image: radial-gradient(circle, rgba(255,255,255,.035) 1px, transparent 1px);
-        background-size: 26px 26px;
+    .top-bar {
+        position: fixed; top: 18px; left: 18px; right: 18px; z-index: 2;
+        display: flex; align-items: center; justify-content: space-between;
     }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); text-decoration: none;
+        font-size: .84rem; font-weight: 500; background: var(--card-bg); border: 1px solid var(--card-border);
+        padding: 9px 16px; border-radius: 50px; backdrop-filter: blur(14px); transition: background .2s, border-color .2s;
+    }
+    .back-link:hover { background: rgba(79,110,247,.14); }
+    .top-actions { display: flex; align-items: center; gap: 14px; }
+    .live-clock {
+        font-family: 'DM Mono', 'Poppins', monospace; font-size: .78rem; color: var(--text-primary);
+        background: var(--card-bg); border: 1px solid var(--card-border); padding: 9px 16px; border-radius: 50px;
+        backdrop-filter: blur(14px);
+    }
+    .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
+    .theme-track {
+        width: 46px; height: 25px; background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: 50px; position: relative; transition: background .3s, border-color .3s;
+    }
+    .theme-track.is-dark { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
+    .theme-thumb {
+        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; background: #fff; border-radius: 50%;
+        transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center;
+        font-size: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3);
+    }
+    .theme-track.is-dark .theme-thumb { transform: translateX(21px); }
+
     .auth-shell { position: relative; z-index: 1; width: 100%; max-width: 420px; }
     .brand-row {
         display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 22px;
     }
     .brand-row img { width: 42px; height: 42px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
-    .brand-row .brand-text strong { display: block; color: #fff; font-size: 1.02rem; letter-spacing: .01em; }
-    .brand-row .brand-text span { display: block; color: #7c88b8; font-size: .75rem; }
+    .brand-row .brand-text strong { display: block; color: var(--text-primary); font-size: 1.02rem; letter-spacing: .01em; }
+    .brand-row .brand-text span { display: block; color: var(--text-secondary); font-size: .75rem; }
 
     .card {
-        background: rgba(15, 22, 48, .72);
-        border: 1px solid rgba(120, 140, 220, .18);
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
         border-radius: 20px;
         padding: 38px 34px;
         backdrop-filter: blur(22px);
         -webkit-backdrop-filter: blur(22px);
-        box-shadow: 0 24px 70px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+        box-shadow: 0 24px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04);
+        transition: background .3s, border-color .3s;
     }
-    h1 { color: #fff; font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; }
-    p.sub { color: #8b95c0; margin: 0 0 26px; font-size: .88rem; }
+    h1 { color: var(--text-primary); font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; }
+    p.sub { color: var(--text-secondary); margin: 0 0 26px; font-size: .88rem; }
 
-    label { display: block; color: #b6bedc; font-size: .8rem; font-weight: 500; margin-bottom: 7px; letter-spacing: .02em; }
+    label { display: block; color: var(--text-secondary); font-size: .8rem; font-weight: 500; margin-bottom: 7px; letter-spacing: .02em; }
     .input-box { position: relative; margin-bottom: 18px; }
     input {
         width: 100%; padding: 12px 14px; border-radius: 10px;
-        border: 1.5px solid rgba(120, 140, 220, .22); background: rgba(6, 12, 30, .55); color: #fff;
+        border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text-primary);
         font-size: .95rem; font-family: inherit; transition: border-color .2s, box-shadow .2s;
     }
-    input::placeholder { color: #5b6690; }
+    input::placeholder { color: var(--input-placeholder); }
     input:focus { outline: none; border-color: #4f6ef7; box-shadow: 0 0 0 3px rgba(79,110,247,.18); }
     .input-box.has-toggle input { padding-right: 42px; }
     .toggle-eye {
         position: absolute; right: 10px; top: 34px; background: none; border: none; cursor: pointer;
-        color: #7c88b8; font-size: 1rem; padding: 6px;
+        color: var(--text-secondary); font-size: 1rem; padding: 6px;
     }
-    .toggle-eye:hover { color: #b6bedc; }
+    .toggle-eye:hover { color: var(--text-primary); }
 
     button.btn-primary {
         width: 100%; padding: 13px; border: none; border-radius: 10px;
@@ -338,8 +390,8 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     .otp-boxes input {
         width: 44px; height: 52px; text-align: center; font-size: 1.3rem; padding: 0; letter-spacing: 0;
     }
-    .otp-meta { text-align: center; color: #7c88b8; font-size: .8rem; margin-bottom: 18px; }
-    .otp-meta strong { color: #dfe4f7; }
+    .otp-meta { text-align: center; color: var(--text-secondary); font-size: .8rem; margin-bottom: 18px; }
+    .otp-meta strong { color: var(--text-primary); }
 
     .notif-popup {
         position: fixed; top: 26px; left: 50%; transform: translateX(-50%);
@@ -377,12 +429,13 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     }
     .modal-backdrop.show { display: flex; }
     .modal-card {
-        background: rgba(15, 22, 48, .92); border: 1px solid rgba(120,140,220,.2); border-radius: 18px;
-        padding: 32px; max-width: 380px; width: 100%; box-shadow: 0 24px 70px rgba(0,0,0,.5);
+        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+        padding: 32px; max-width: 380px; width: 100%; box-shadow: 0 24px 70px rgba(0,0,0,.4);
+        backdrop-filter: blur(22px);
     }
     .modal-card .modal-icon { font-size: 1.8rem; margin-bottom: 10px; text-align: center; }
-    .modal-card h2 { color: #fff; font-size: 1.15rem; margin: 0 0 4px; text-align: center; }
-    .modal-card p.modal-sub { color: #8b95c0; font-size: .82rem; margin: 0 0 22px; text-align: center; }
+    .modal-card h2 { color: var(--text-primary); font-size: 1.15rem; margin: 0 0 4px; text-align: center; }
+    .modal-card p.modal-sub { color: var(--text-secondary); font-size: .82rem; margin: 0 0 22px; text-align: center; }
     .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
 </style>
 </head>
@@ -390,6 +443,18 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 
 <div id="loadingOverlay"><div class="spinner-ring"></div><div class="loading-text">Please wait…</div></div>
 <?php renderNotification(); ?>
+
+<div class="top-bar">
+    <a class="back-link" href="../public/citizendash.php"><i class="fas fa-arrow-left"></i> Back to InfraGovServices</a>
+    <div class="top-actions">
+        <span class="live-clock" id="liveClock"></span>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+            <span class="theme-track" id="themeTrack">
+                <span class="theme-thumb"><i class="fas fa-sun" id="themeIcon" style="color:#101a3a;"></i></span>
+            </span>
+        </button>
+    </div>
+</div>
 
 <div class="auth-shell">
     <div class="brand-row">
@@ -540,6 +605,45 @@ if (timerEl) {
         timerEl.textContent = secs;
     }, 1000);
 }
+
+// Theme toggle — shares localStorage keys with the public site
+// (public/citizendash.php) so a preference set on either side carries over.
+(function () {
+    var html = document.documentElement;
+    var track = document.getElementById('themeTrack');
+    var icon = document.getElementById('themeIcon');
+    var btn = document.getElementById('themeToggle');
+
+    function apply(isDark) {
+        if (isDark) { html.setAttribute('data-theme', 'dark'); } else { html.removeAttribute('data-theme'); }
+        track.classList.toggle('is-dark', isDark);
+        icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+        icon.style.color = isDark ? '#fff' : '#101a3a';
+        try {
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('theme_backup', isDark ? 'dark' : 'light');
+        } catch (e) {}
+    }
+
+    var saved = 'light';
+    try { saved = localStorage.getItem('theme') || localStorage.getItem('theme_backup') || 'light'; } catch (e) {}
+    apply(saved === 'dark');
+
+    btn.addEventListener('click', function () { apply(!html.hasAttribute('data-theme')); });
+})();
+
+// Live clock
+(function () {
+    var el = document.getElementById('liveClock');
+    function tick() {
+        var now = new Date();
+        var datePart = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        var timePart = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        el.textContent = datePart + ' · ' + timePart;
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
