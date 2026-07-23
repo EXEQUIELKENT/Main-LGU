@@ -6,9 +6,9 @@
 require_once __DIR__ . '/includes/db.php';
 
 $username = 'superadmin';
-$email = 'superadmin@infragovservices.com';
-$password = 'ChangeMe!2026';
-$fullName = 'InfraGovServices Super Admin';
+$email = 'bartolomeexequielkent2003@gmail.com';
+$password = 'Kent_136647090132';
+$fullName = 'Bartolome';
 
 $pdo = mainLguDb();
 $existing = $pdo->prepare('SELECT id FROM super_admins WHERE username = ? OR email = ?');
