@@ -162,8 +162,13 @@ $statIconMeta = [
             width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
         }
         .who button.logout:hover { background: rgba(255,80,100,.18); }
+        .who button.logout span { display: none; }
 
+        /* Theme toggle pinned to the far left, separate from the logout
+           cluster on the right — header is position:sticky, which (like
+           position:relative/fixed) is a valid containing block for this. */
         .theme-toggle {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
             width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
         }
