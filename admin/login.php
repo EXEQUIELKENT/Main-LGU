@@ -313,42 +313,77 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         background-position: center, center;
         background-attachment: fixed, fixed;
         position: relative;
-        padding: 24px; padding-top: 78px;
+        padding: 24px;
         transition: color .3s;
     }
-    /* ── Compact top bar — same pattern as the public site's mobile nav bar ── */
+    /* ── Desktop top bar (floating pills) ── */
     .top-bar {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-        height: 54px; display: flex; align-items: center; justify-content: space-between;
-        padding: 0 16px; gap: 10px;
-        background: rgba(5,10,25,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(59,130,246,.2);
-        box-shadow: 0 2px 16px rgba(0,0,0,.5);
+        position: fixed; top: 18px; left: 18px; right: 18px; z-index: 200;
+        display: flex; align-items: center; justify-content: space-between;
     }
     .back-link {
-        display: inline-flex; align-items: center; gap: 7px; color: #fff; text-decoration: none;
-        font-size: .8rem; font-weight: 600;
-        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-        padding: 7px 12px; border-radius: 8px; transition: background .2s;
+        display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); text-decoration: none;
+        font-size: .84rem; font-weight: 500; background: var(--card-bg); border: 1px solid var(--card-border);
+        padding: 9px 16px; border-radius: 50px; backdrop-filter: blur(14px); transition: background .2s, border-color .2s;
     }
-    .back-link:hover { background: rgba(59,130,246,.2); }
-    .top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .back-link:hover { background: rgba(79,110,247,.14); }
+    .top-actions { display: flex; align-items: center; gap: 14px; }
     .live-clock {
-        font-family: 'DM Mono', 'Poppins', monospace; font-size: .74rem; font-weight: 700;
-        color: rgba(255,255,255,.65); white-space: nowrap;
+        font-family: 'DM Mono', 'Poppins', monospace; font-size: .78rem; color: var(--text-primary);
+        background: var(--card-bg); border: 1px solid var(--card-border); padding: 9px 16px; border-radius: 50px;
+        backdrop-filter: blur(14px); white-space: nowrap;
     }
-    .live-clock i { display: none; }
-    .theme-toggle {
-        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer;
-        width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-        transition: background .2s, transform .2s;
+    .clock-date::after { content: ' · '; }
+    .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
+    .theme-track {
+        width: 46px; height: 25px; background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: 50px; position: relative; transition: background .3s, border-color .3s; display: block;
     }
-    .theme-toggle:hover { background: rgba(59,130,246,.2); transform: scale(1.08); }
-    .theme-track, .theme-thumb { all: unset; display: flex; align-items: center; justify-content: center; }
-    .theme-track i { font-size: 14px; color: #fbbf24; }
-    [data-theme="dark"] .theme-track i.fa-sun { display: none; }
-    .theme-track i.fa-moon { display: none; color: #93c5fd; }
-    [data-theme="dark"] .theme-track i.fa-moon { display: inline; }
+    [data-theme="dark"] .theme-track { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
+    .theme-thumb {
+        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; background: #fff; border-radius: 50%;
+        transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center;
+        font-size: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3);
+    }
+    [data-theme="dark"] .theme-thumb { transform: translateX(21px); }
+    .theme-thumb .fa-sun { color: #101a3a; }
+    .theme-thumb .fa-moon { display: none; color: #fff; }
+    [data-theme="dark"] .theme-thumb .fa-sun { display: none; }
+    [data-theme="dark"] .theme-thumb .fa-moon { display: inline; }
+
+    /* ── Mobile: compact always-dark bar (same pattern as public site's mobile nav) ── */
+    @media (max-width: 640px) {
+        .top-bar {
+            position: fixed; top: 0; left: 0; right: 0; height: 54px;
+            padding: 0 12px; gap: 8px;
+            background: rgba(5,10,25,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(59,130,246,.2); box-shadow: 0 2px 16px rgba(0,0,0,.5);
+        }
+        .back-link {
+            background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12);
+            width: 32px; height: 32px; padding: 0; border-radius: 8px; justify-content: center; gap: 0;
+        }
+        .back-link:hover { background: rgba(59,130,246,.2); }
+        .back-link .back-label { display: none; }
+        .top-actions { gap: 8px; }
+        .live-clock {
+            background: none; border: none; padding: 0; backdrop-filter: none;
+            font-size: .74rem; font-weight: 700; color: rgba(255,255,255,.65);
+        }
+        .clock-date { display: none; }
+        .theme-toggle {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+            width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
+        }
+        .theme-toggle:hover { background: rgba(59,130,246,.2); }
+        .theme-track { position: static; width: auto; height: auto; background: none !important; border: none !important; display: flex; }
+        .theme-thumb {
+            position: static; width: auto; height: auto; background: none !important; box-shadow: none; transform: none !important;
+        }
+        .theme-thumb i { font-size: 14px; }
+        .theme-thumb .fa-sun { color: #fbbf24; }
+        .theme-thumb .fa-moon { color: #93c5fd; }
+    }
 
     .auth-shell { position: relative; z-index: 1; width: 100%; max-width: 420px; }
     .brand-row {
@@ -368,6 +403,11 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         -webkit-backdrop-filter: blur(22px);
         box-shadow: 0 24px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04);
         transition: background .3s, border-color .3s;
+        animation: authCardIn .5s cubic-bezier(.34,1.56,.64,1) backwards;
+    }
+    @keyframes authCardIn {
+        from { opacity: 0; transform: translateY(18px) scale(.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
     }
     h1 { color: var(--text-primary); font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; text-align: center; }
     p.sub { color: var(--text-secondary); margin: 0 0 26px; font-size: .88rem; text-align: center; }
@@ -456,20 +496,13 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     .modal-card p.modal-sub { color: var(--text-secondary); font-size: .82rem; margin: 0 0 22px; text-align: center; }
     .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
 
-    /* ── Mobile ─────────────────────────────────────────── */
+    /* ── Mobile: card sizing ────────────────────────────── */
     @media (max-width: 640px) {
         body { padding: 14px; padding-top: 68px; }
-        .top-bar { padding: 0 12px; }
-        .back-link { font-size: .74rem; padding: 6px 10px; }
-        .live-clock { font-size: .68rem; }
         .auth-shell { max-width: 100%; width: 100%; margin: 0 auto; }
         .card { padding: 28px 22px; border-radius: 18px; }
         h1 { font-size: 1.25rem; }
         .otp-boxes input { font-size: 1.15rem; }
-    }
-    @media (max-width: 380px) {
-        .back-link .back-label { display: none; }
-        .live-clock { display: none; }
     }
 </style>
 </head>
@@ -481,10 +514,10 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 <div class="top-bar">
     <a class="back-link" href="../public/citizendash.php"><i class="fas fa-arrow-left"></i> <span class="back-label">Back to InfraGovServices</span></a>
     <div class="top-actions">
-        <span class="live-clock" id="liveClock"></span>
+        <span class="live-clock"><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
             <span class="theme-track">
-                <i class="fas fa-sun"></i><i class="fas fa-moon"></i>
+                <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
             </span>
         </button>
     </div>
@@ -658,14 +691,14 @@ if (timerEl) {
     btn.addEventListener('click', function () { apply(!html.hasAttribute('data-theme')); });
 })();
 
-// Live clock
+// Live clock — date hidden on mobile via CSS, only the time shows there
 (function () {
-    var el = document.getElementById('liveClock');
+    var dateEl = document.getElementById('clockDate');
+    var timeEl = document.getElementById('clockTime');
     function tick() {
         var now = new Date();
-        var datePart = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        var timePart = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-        el.textContent = datePart + ' · ' + timePart;
+        dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        timeEl.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     }
     tick();
     setInterval(tick, 1000);

@@ -85,67 +85,123 @@ $cardMeta = [
         background-position: center, center;
         background-attachment: fixed, fixed;
     }
-    /* ── Compact top bar — same pattern as the public site's mobile nav bar ── */
+    /* ── Desktop header ── */
     header {
         position: sticky; top: 0; z-index: 200;
-        height: 54px; display: flex; align-items: center; justify-content: space-between;
-        padding: 0 20px; gap: 10px;
-        background: rgba(5,10,25,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(59,130,246,.2);
-        box-shadow: 0 2px 16px rgba(0,0,0,.5);
+        background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--card-border);
+        padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+        transition: background .3s, border-color .3s;
+        flex-wrap: wrap; gap: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .brand img { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
-    .brand strong { color: #fff; font-size: .88rem; display: block; white-space: nowrap; }
-    .brand span { color: rgba(255,255,255,.5); font-size: .68rem; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { width: 36px; height: 36px; border-radius: 9px; }
+    .brand strong { color: var(--text-primary); font-size: 1rem; display: block; }
+    .brand span { color: var(--text-secondary); font-size: .74rem; }
 
     .header-clock {
-        font-family: 'DM Mono', monospace; font-size: .74rem; font-weight: 700;
-        color: rgba(255,255,255,.65); white-space: nowrap;
+        font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary);
+        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 7px 12px; border-radius: 50px;
+        display: flex; align-items: center; gap: 6px; white-space: nowrap;
     }
-    .header-clock i { display: none; }
+    .header-clock i { font-size: .72rem; opacity: .8; }
+    .clock-date::after { content: ' · '; }
 
-    .who { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .who { display: flex; align-items: center; gap: 14px; }
     .who .user-chip {
-        display: flex; align-items: center; gap: 7px;
-        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); padding: 3px 10px 3px 3px; border-radius: 8px;
+        display: flex; align-items: center; gap: 9px;
+        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 5px 14px 5px 6px; border-radius: 50px;
     }
     .who .user-avatar {
-        width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
-        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700;
+        width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
+        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700;
         flex-shrink: 0;
     }
-    .who .name { color: rgba(255,255,255,.65); font-size: .76rem; }
-    .who .name strong { color: #fff; }
+    .who .name { color: var(--text-secondary); font-size: .8rem; }
+    .who .name strong { color: var(--text-primary); }
     .who button.logout {
-        color: #fca5b1; background: rgba(255,255,255,.06); font-size: .78rem; font-weight: 500; font-family: inherit;
-        border: 1px solid rgba(255,143,163,.3); width: 32px; height: 32px; border-radius: 8px; transition: background .2s, transform .2s;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        color: #ff8fa3; background: none; font-size: .82rem; font-weight: 500; font-family: inherit;
+        border: 1px solid rgba(255,143,163,.35); padding: 8px 16px; border-radius: 50px; transition: background .15s;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
     }
-    .who button.logout:hover { background: rgba(255,80,100,.18); transform: scale(1.08); }
-    .who button.logout span { display: none; }
+    .who button.logout:hover { background: rgba(255,143,163,.1); }
 
-    /* Theme toggle — icon swap, matching the compact bar's square-button style */
-    .theme-toggle {
-        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer;
-        width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-        transition: background .2s, transform .2s; flex-shrink: 0;
+    /* Theme toggle switch — same visual language as the public site */
+    .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
+    .theme-track {
+        width: 46px; height: 25px; background: rgba(120,140,220,.16); border: 1px solid var(--card-border);
+        border-radius: 50px; position: relative; transition: background .3s, border-color .3s; display: block;
     }
-    .theme-toggle:hover { background: rgba(59,130,246,.2); transform: scale(1.08); }
-    .theme-track { display: flex; align-items: center; justify-content: center; }
-    .theme-track i { font-size: 14px; color: #fbbf24; }
-    [data-theme="dark"] .theme-track i.fa-sun { display: none; }
-    .theme-track i.fa-moon { display: none; color: #93c5fd; }
-    [data-theme="dark"] .theme-track i.fa-moon { display: inline; }
+    [data-theme="dark"] .theme-track { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
+    .theme-thumb {
+        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; background: #fff; border-radius: 50%;
+        transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center;
+        font-size: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3);
+    }
+    [data-theme="dark"] .theme-thumb { transform: translateX(21px); }
+    .theme-thumb .fa-sun { color: #101a3a; }
+    .theme-thumb .fa-moon { display: none; color: #fff; }
+    [data-theme="dark"] .theme-thumb .fa-sun { display: none; }
+    [data-theme="dark"] .theme-thumb .fa-moon { display: inline; }
+
+    /* ── Mobile: compact always-dark bar (same pattern as public site's mobile nav) ── */
+    @media (max-width: 768px) {
+        header {
+            position: sticky; top: 0; height: 54px; padding: 0 14px; gap: 8px;
+            background: rgba(5,10,25,.94); border-bottom: 1px solid rgba(59,130,246,.2);
+            box-shadow: 0 2px 16px rgba(0,0,0,.5); justify-content: flex-end;
+        }
+        .brand {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            gap: 0;
+        }
+        .brand img { width: 26px; height: 26px; }
+        .brand strong, .brand span { display: none; }
+
+        .header-clock {
+            background: none; border: none; padding: 0; backdrop-filter: none;
+            font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.65);
+        }
+        .header-clock i { display: none; }
+        .clock-date { display: none; }
+
+        .who { gap: 6px; }
+        .who .user-chip { display: none; }
+        .who button.logout {
+            color: #fca5b1; background: rgba(255,255,255,.06); border-color: rgba(255,143,163,.3);
+            width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
+        }
+        .who button.logout:hover { background: rgba(255,80,100,.18); }
+
+        .theme-toggle {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+            width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
+        }
+        .theme-toggle:hover { background: rgba(59,130,246,.2); }
+        .theme-track { position: static; width: auto; height: auto; background: none !important; border: none !important; display: flex; }
+        .theme-thumb { position: static; width: auto; height: auto; background: none !important; box-shadow: none; transform: none !important; }
+        .theme-thumb i { font-size: 14px; }
+        .theme-thumb .fa-sun { color: #fbbf24; }
+        .theme-thumb .fa-moon { color: #93c5fd; }
+    }
 
     main { max-width: 1300px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
 
+    @keyframes dashCardIn {
+        from { opacity: 0; transform: translateY(18px) scale(.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 36px; }
     .stat-tile {
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
         padding: 18px 20px; backdrop-filter: blur(14px); transition: background .3s, border-color .3s, transform .2s;
         display: flex; align-items: center; gap: 14px;
+        animation: dashCardIn .5s cubic-bezier(.34,1.56,.64,1) backwards;
     }
+    .stat-tile:nth-child(1) { animation-delay: .04s; }
+    .stat-tile:nth-child(2) { animation-delay: .09s; }
+    .stat-tile:nth-child(3) { animation-delay: .14s; }
+    .stat-tile:nth-child(4) { animation-delay: .19s; }
     .stat-tile:hover { transform: translateY(-2px); }
     .stat-icon {
         width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
@@ -158,8 +214,6 @@ $cardMeta = [
     .stat-tile .label { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .stat-tile .value { font-family: 'DM Mono', monospace; font-size: 1.4rem; color: var(--text-primary); font-weight: 500; }
 
-    h2.section-title { color: var(--text-primary); font-size: 1rem; font-weight: 600; margin: 0 0 18px; letter-spacing: .01em; }
-
     /* ── Department cards — lifted from public/styles.css .db-svc3-* ── */
     .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     @media (max-width: 1024px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -170,7 +224,13 @@ $cardMeta = [
         display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,.07);
         transition: transform .4s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease, border-color .3s ease;
         text-decoration: none;
+        animation: dashCardIn .55s cubic-bezier(.34,1.56,.64,1) backwards;
     }
+    .svc-card:nth-child(1) { animation-delay: .1s; }
+    .svc-card:nth-child(2) { animation-delay: .16s; }
+    .svc-card:nth-child(3) { animation-delay: .22s; }
+    .svc-card:nth-child(4) { animation-delay: .28s; }
+    .svc-card:nth-child(5) { animation-delay: .34s; }
     .svc-blue   { background: linear-gradient(145deg, #0d1f52 0%, #1a3a8a 55%, #1e56c8 100%); }
     .svc-orange { background: linear-gradient(145deg, #3d1400 0%, #8b3000 55%, #c84b10 100%); }
     .svc-purple { background: linear-gradient(145deg, #1e0b4a 0%, #4c1f8f 55%, #7c3fd4 100%); }
@@ -256,12 +316,8 @@ $cardMeta = [
     .modal-actions .btn-confirm { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,.35); }
     .modal-actions .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(239,68,68,.45); }
 
-    /* ── Mobile ─────────────────────────────────────────────── */
+    /* ── Mobile: content sizing ────────────────────────────── */
     @media (max-width: 768px) {
-        header { padding: 0 12px; }
-        .header-clock { font-size: .66rem; }
-        .who { gap: 6px; }
-        .who .user-chip .name { display: none; }
         main { padding: 18px 14px 40px; }
         .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
         .stat-tile { padding: 12px 14px; gap: 10px; }
@@ -270,7 +326,6 @@ $cardMeta = [
         .svc-grid { gap: 14px; }
     }
     @media (max-width: 420px) {
-        .header-clock { display: none; }
         .stats-row { grid-template-columns: 1fr 1fr; }
     }
 </style>
@@ -285,10 +340,10 @@ $cardMeta = [
         </div>
     </div>
     <div class="who">
-        <span class="header-clock" id="liveClock"><i class="fas fa-clock"></i> <span id="liveClockText"></span></span>
+        <span class="header-clock"><i class="fas fa-clock"></i><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
             <span class="theme-track">
-                <i class="fas fa-sun"></i><i class="fas fa-moon"></i>
+                <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
             </span>
         </button>
         <div class="user-chip">
@@ -330,7 +385,6 @@ $cardMeta = [
         </div>
     </div>
 
-    <h2 class="section-title">Connected systems</h2>
     <div class="svc-grid">
     <?php foreach ($systems as $system):
         $meta = $cardMeta[$system['slug']] ?? ['theme' => 'blue', 'icon' => 'fa-server', 'tag' => strtoupper($system['slug']), 'num' => '00'];
@@ -392,14 +446,14 @@ $cardMeta = [
     });
 })();
 
-// Live clock
+// Live clock — date hidden on mobile via CSS, only the time shows there
 (function () {
-    var el = document.getElementById('liveClockText');
+    var dateEl = document.getElementById('clockDate');
+    var timeEl = document.getElementById('clockTime');
     function tick() {
         var now = new Date();
-        var datePart = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        var timePart = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-        el.textContent = datePart + ' · ' + timePart;
+        dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        timeEl.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     }
     tick();
     setInterval(tick, 1000);
