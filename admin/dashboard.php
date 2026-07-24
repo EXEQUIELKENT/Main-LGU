@@ -1,24 +1,11 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/system_stats.php';
 require_super_admin();
 
 $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fetchAll();
-
-$activeCount = 0;
-foreach ($systems as $s) {
-    if ($s['is_active']) {
-        $activeCount++;
-    }
-}
-
-$launchesToday = mainLguDb()->query(
-    "SELECT COUNT(*) FROM sso_launch_log WHERE DATE(launched_at) = CURDATE()"
-)->fetchColumn();
-
-$lastLoginStmt = mainLguDb()->prepare('SELECT last_login FROM super_admins WHERE id = ?');
-$lastLoginStmt->execute([$_SESSION['super_admin_id']]);
-$lastLogin = $lastLoginStmt->fetchColumn();
+$systemStats = fetchAllSystemStats($systems);
 
 // Mirrors the "Explore Departments" card styling/colors on the public
 // citizendash.php page (.db-svc3-*) so the admin side feels like the same
@@ -29,6 +16,9 @@ $cardMeta = [
     'cprf' => ['theme' => 'purple', 'icon' => 'fa-calendar-check', 'tag' => 'CPRF', 'num' => '03'],
     'cimm' => ['theme' => 'rose', 'icon' => 'fa-tools', 'tag' => 'CIMM', 'num' => '04'],
     'energy' => ['theme' => 'teal', 'icon' => 'fa-leaf', 'tag' => 'ECM', 'num' => '05'],
+];
+$statIconMeta = [
+    'ipms' => 'blue', 'roadmon' => 'amber', 'cprf' => 'purple', 'cimm' => 'green', 'energy' => 'teal',
 ];
 ?>
 <!DOCTYPE html>
@@ -211,6 +201,8 @@ $cardMeta = [
     .stat-icon.green  { background: linear-gradient(135deg,#10b981,#047857); }
     .stat-icon.amber  { background: linear-gradient(135deg,#f59e0b,#d97706); }
     .stat-icon.purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+    .stat-icon.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
+    .stat-tile .stat-fallback { color: var(--text-secondary); font-size: .95rem; font-weight: 500; }
     .stat-tile .label { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .stat-tile .value { font-family: 'DM Mono', monospace; font-size: 1.4rem; color: var(--text-primary); font-weight: 500; }
 
@@ -355,34 +347,23 @@ $cardMeta = [
 </header>
 <main>
     <div class="stats-row">
+    <?php foreach ($systems as $system):
+        $meta = $cardMeta[$system['slug']] ?? ['icon' => 'fa-server'];
+        $iconColor = $statIconMeta[$system['slug']] ?? 'blue';
+        $stat = $systemStats[$system['slug']] ?? null;
+    ?>
         <div class="stat-tile">
-            <div class="stat-icon blue"><i class="fas fa-diagram-project"></i></div>
+            <div class="stat-icon <?= $iconColor ?>"><i class="fas <?= $meta['icon'] ?>"></i></div>
             <div>
-                <div class="label">Connected systems</div>
-                <div class="value"><?= count($systems) ?></div>
+                <div class="label"><?= htmlspecialchars($stat['label'] ?? $system['name']) ?></div>
+                <?php if ($stat !== null): ?>
+                    <div class="value"><?= $stat['count'] ?></div>
+                <?php else: ?>
+                    <div class="stat-fallback">—</div>
+                <?php endif; ?>
             </div>
         </div>
-        <div class="stat-tile">
-            <div class="stat-icon green"><i class="fas fa-circle-check"></i></div>
-            <div>
-                <div class="label">Active</div>
-                <div class="value"><?= $activeCount ?></div>
-            </div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-icon amber"><i class="fas fa-rocket"></i></div>
-            <div>
-                <div class="label">Launches today</div>
-                <div class="value"><?= (int) $launchesToday ?></div>
-            </div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-icon purple"><i class="fas fa-clock-rotate-left"></i></div>
-            <div>
-                <div class="label">Last login</div>
-                <div class="value" style="font-size:1rem;"><?= $lastLogin ? date('M j, g:i A', strtotime($lastLogin)) : '—' ?></div>
-            </div>
-        </div>
+    <?php endforeach; ?>
     </div>
 
     <div class="svc-grid">
