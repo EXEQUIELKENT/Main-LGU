@@ -198,7 +198,8 @@ $systemStats = fetchAllSystemStats($systems);
         .theme-thumb .fa-moon { color: #93c5fd; }
     }
 
-    main { max-width: 1300px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
+    main { max-width: 1500px; margin: 0; padding: 34px 32px 60px; position: relative; z-index: 1; transition: max-width .3s ease; }
+    .sidebar.collapsed ~ .main-content main { max-width: 1596px; }
 
     @keyframes dashCardIn {
         from { opacity: 0; transform: translateY(18px) scale(.97); }
