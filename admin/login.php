@@ -499,8 +499,6 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         </div>
 
         <?php if (!$showOtpForm): ?>
-            <h1>Sign in</h1>
-            <p class="sub">Access the admin side of every connected system.</p>
             <form method="post" autocomplete="off" id="loginForm">
                 <input type="hidden" name="action" value="login">
                 <div class="input-box">
