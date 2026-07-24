@@ -461,6 +461,19 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         transition: background-color 5000s ease-in-out 0s, box-shadow 5000s ease-in-out 0s;
     }
     .input-box.has-toggle input { padding-right: 42px; }
+    /* Hide native browser password reveal/clear icons so only our custom eye icon shows */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none;
+    }
+    input[type="password"]::-webkit-credentials-auto-fill-button,
+    input[type="password"]::-webkit-strong-password-auto-fill-button {
+        visibility: hidden;
+        display: none !important;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+    }
     .toggle-eye {
         position: absolute; right: 10px; top: 34px; background: none; border: none; cursor: pointer;
         color: var(--text-secondary); font-size: 1rem; padding: 6px;
