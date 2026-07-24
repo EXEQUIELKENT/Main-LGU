@@ -60,14 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'login';
 
     if ($action === 'login') {
-        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
 
-        if ($username === '' || $password === '') {
-            setNotification('error', 'Enter your username and password.');
+        if ($email === '' || $password === '') {
+            setNotification('error', 'Enter your email and password.');
         } else {
-            $stmt = mainLguDb()->prepare('SELECT * FROM super_admins WHERE username = ? OR email = ? LIMIT 1');
-            $stmt->execute([$username, $username]);
+            $stmt = mainLguDb()->prepare('SELECT * FROM super_admins WHERE email = ? LIMIT 1');
+            $stmt->execute([$email]);
             $admin = $stmt->fetch();
 
             if ($admin && password_verify($password, $admin['password_hash'])) {
@@ -313,37 +313,42 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         background-position: center, center;
         background-attachment: fixed, fixed;
         position: relative;
-        padding: 24px;
+        padding: 24px; padding-top: 78px;
         transition: color .3s;
     }
+    /* ── Compact top bar — same pattern as the public site's mobile nav bar ── */
     .top-bar {
-        position: fixed; top: 18px; left: 18px; right: 18px; z-index: 2;
-        display: flex; align-items: center; justify-content: space-between;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+        height: 54px; display: flex; align-items: center; justify-content: space-between;
+        padding: 0 16px; gap: 10px;
+        background: rgba(5,10,25,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(59,130,246,.2);
+        box-shadow: 0 2px 16px rgba(0,0,0,.5);
     }
     .back-link {
-        display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); text-decoration: none;
-        font-size: .84rem; font-weight: 500; background: var(--card-bg); border: 1px solid var(--card-border);
-        padding: 9px 16px; border-radius: 50px; backdrop-filter: blur(14px); transition: background .2s, border-color .2s;
+        display: inline-flex; align-items: center; gap: 7px; color: #fff; text-decoration: none;
+        font-size: .8rem; font-weight: 600;
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+        padding: 7px 12px; border-radius: 8px; transition: background .2s;
     }
-    .back-link:hover { background: rgba(79,110,247,.14); }
-    .top-actions { display: flex; align-items: center; gap: 14px; }
+    .back-link:hover { background: rgba(59,130,246,.2); }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .live-clock {
-        font-family: 'DM Mono', 'Poppins', monospace; font-size: .78rem; color: var(--text-primary);
-        background: var(--card-bg); border: 1px solid var(--card-border); padding: 9px 16px; border-radius: 50px;
-        backdrop-filter: blur(14px);
+        font-family: 'DM Mono', 'Poppins', monospace; font-size: .74rem; font-weight: 700;
+        color: rgba(255,255,255,.65); white-space: nowrap;
     }
-    .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
-    .theme-track {
-        width: 46px; height: 25px; background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: 50px; position: relative; transition: background .3s, border-color .3s;
+    .live-clock i { display: none; }
+    .theme-toggle {
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer;
+        width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        transition: background .2s, transform .2s;
     }
-    .theme-track.is-dark { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
-    .theme-thumb {
-        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; background: #fff; border-radius: 50%;
-        transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center;
-        font-size: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3);
-    }
-    .theme-track.is-dark .theme-thumb { transform: translateX(21px); }
+    .theme-toggle:hover { background: rgba(59,130,246,.2); transform: scale(1.08); }
+    .theme-track, .theme-thumb { all: unset; display: flex; align-items: center; justify-content: center; }
+    .theme-track i { font-size: 14px; color: #fbbf24; }
+    [data-theme="dark"] .theme-track i.fa-sun { display: none; }
+    .theme-track i.fa-moon { display: none; color: #93c5fd; }
+    [data-theme="dark"] .theme-track i.fa-moon { display: inline; }
 
     .auth-shell { position: relative; z-index: 1; width: 100%; max-width: 420px; }
     .brand-row {
@@ -453,14 +458,10 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 
     /* ── Mobile ─────────────────────────────────────────── */
     @media (max-width: 640px) {
-        body { padding: 14px; flex-direction: column; align-items: stretch; justify-content: flex-start; }
-        .top-bar {
-            position: static; width: 100%; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
-        }
-        .back-link { font-size: .78rem; padding: 8px 14px; }
-        .back-link span, .back-link { white-space: nowrap; }
-        .top-actions { gap: 10px; }
-        .live-clock { font-size: .7rem; padding: 8px 12px; }
+        body { padding: 14px; padding-top: 68px; }
+        .top-bar { padding: 0 12px; }
+        .back-link { font-size: .74rem; padding: 6px 10px; }
+        .live-clock { font-size: .68rem; }
         .auth-shell { max-width: 100%; width: 100%; margin: 0 auto; }
         .card { padding: 28px 22px; border-radius: 18px; }
         h1 { font-size: 1.25rem; }
@@ -468,6 +469,7 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     }
     @media (max-width: 380px) {
         .back-link .back-label { display: none; }
+        .live-clock { display: none; }
     }
 </style>
 </head>
@@ -481,8 +483,8 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     <div class="top-actions">
         <span class="live-clock" id="liveClock"></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <span class="theme-track" id="themeTrack">
-                <span class="theme-thumb"><i class="fas fa-sun" id="themeIcon" style="color:#101a3a;"></i></span>
+            <span class="theme-track">
+                <i class="fas fa-sun"></i><i class="fas fa-moon"></i>
             </span>
         </button>
     </div>
@@ -502,8 +504,8 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
             <form method="post" autocomplete="off" id="loginForm">
                 <input type="hidden" name="action" value="login">
                 <div class="input-box">
-                    <label for="username">Username or email</label>
-                    <input type="text" id="username" name="username" placeholder="superadmin" required autofocus>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@infragovservices.com" required autofocus>
                 </div>
                 <div class="input-box has-toggle">
                     <label for="password">Password</label>
@@ -513,7 +515,6 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
                     </button>
                 </div>
                 <div class="row-between">
-                    <span></span>
                     <button type="button" class="link-btn" id="openForgotModal">Forgot password?</button>
                 </div>
                 <button type="submit" class="btn-primary">Sign in</button>
@@ -640,15 +641,10 @@ if (timerEl) {
 // (public/citizendash.php) so a preference set on either side carries over.
 (function () {
     var html = document.documentElement;
-    var track = document.getElementById('themeTrack');
-    var icon = document.getElementById('themeIcon');
     var btn = document.getElementById('themeToggle');
 
     function apply(isDark) {
         if (isDark) { html.setAttribute('data-theme', 'dark'); } else { html.removeAttribute('data-theme'); }
-        track.classList.toggle('is-dark', isDark);
-        icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-        icon.style.color = isDark ? '#fff' : '#101a3a';
         try {
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             localStorage.setItem('theme_backup', isDark ? 'dark' : 'light');

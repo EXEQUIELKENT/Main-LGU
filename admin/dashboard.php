@@ -85,58 +85,58 @@ $cardMeta = [
         background-position: center, center;
         background-attachment: fixed, fixed;
     }
+    /* ── Compact top bar — same pattern as the public site's mobile nav bar ── */
     header {
-        position: sticky; top: 0; z-index: 20;
-        background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid var(--card-border);
-        padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
-        transition: background .3s, border-color .3s;
-        flex-wrap: wrap; gap: 12px;
+        position: sticky; top: 0; z-index: 200;
+        height: 54px; display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px; gap: 10px;
+        background: rgba(5,10,25,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(59,130,246,.2);
+        box-shadow: 0 2px 16px rgba(0,0,0,.5);
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 36px; height: 36px; border-radius: 9px; }
-    .brand strong { color: var(--text-primary); font-size: 1rem; display: block; }
-    .brand span { color: var(--text-secondary); font-size: .74rem; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand img { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
+    .brand strong { color: #fff; font-size: .88rem; display: block; white-space: nowrap; }
+    .brand span { color: rgba(255,255,255,.5); font-size: .68rem; }
 
     .header-clock {
-        font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary);
-        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 7px 12px; border-radius: 50px;
-        display: flex; align-items: center; gap: 6px;
+        font-family: 'DM Mono', monospace; font-size: .74rem; font-weight: 700;
+        color: rgba(255,255,255,.65); white-space: nowrap;
     }
-    .header-clock i { font-size: .72rem; opacity: .8; }
+    .header-clock i { display: none; }
 
-    .who { display: flex; align-items: center; gap: 14px; }
+    .who { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .who .user-chip {
-        display: flex; align-items: center; gap: 9px;
-        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 5px 14px 5px 6px; border-radius: 50px;
+        display: flex; align-items: center; gap: 7px;
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); padding: 3px 10px 3px 3px; border-radius: 8px;
     }
     .who .user-avatar {
-        width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
-        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700;
+        width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
+        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700;
         flex-shrink: 0;
     }
-    .who .name { color: var(--text-secondary); font-size: .8rem; }
-    .who .name strong { color: var(--text-primary); }
+    .who .name { color: rgba(255,255,255,.65); font-size: .76rem; }
+    .who .name strong { color: #fff; }
     .who button.logout {
-        color: #ff8fa3; background: none; text-decoration: none; font-size: .82rem; font-weight: 500; font-family: inherit;
-        border: 1px solid rgba(255,143,163,.35); padding: 8px 16px; border-radius: 50px; transition: background .15s;
-        cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+        color: #fca5b1; background: rgba(255,255,255,.06); font-size: .78rem; font-weight: 500; font-family: inherit;
+        border: 1px solid rgba(255,143,163,.3); width: 32px; height: 32px; border-radius: 8px; transition: background .2s, transform .2s;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .who button.logout:hover { background: rgba(255,143,163,.1); }
+    .who button.logout:hover { background: rgba(255,80,100,.18); transform: scale(1.08); }
+    .who button.logout span { display: none; }
 
-    /* Theme toggle switch — same visual language as the public site */
-    .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
-    .theme-track {
-        width: 46px; height: 25px; background: rgba(120,140,220,.16); border: 1px solid var(--card-border);
-        border-radius: 50px; position: relative; transition: background .3s, border-color .3s;
+    /* Theme toggle — icon swap, matching the compact bar's square-button style */
+    .theme-toggle {
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer;
+        width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        transition: background .2s, transform .2s; flex-shrink: 0;
     }
-    .theme-track.is-dark { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
-    .theme-thumb {
-        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; background: #fff; border-radius: 50%;
-        transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center;
-        font-size: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3);
-    }
-    .theme-track.is-dark .theme-thumb { transform: translateX(21px); }
+    .theme-toggle:hover { background: rgba(59,130,246,.2); transform: scale(1.08); }
+    .theme-track { display: flex; align-items: center; justify-content: center; }
+    .theme-track i { font-size: 14px; color: #fbbf24; }
+    [data-theme="dark"] .theme-track i.fa-sun { display: none; }
+    .theme-track i.fa-moon { display: none; color: #93c5fd; }
+    [data-theme="dark"] .theme-track i.fa-moon { display: inline; }
 
     main { max-width: 1300px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
 
@@ -258,23 +258,10 @@ $cardMeta = [
 
     /* ── Mobile ─────────────────────────────────────────────── */
     @media (max-width: 768px) {
-        header { padding: 8px 14px; gap: 8px; row-gap: 6px; }
-        .brand { gap: 8px; }
-        .brand img { width: 26px; height: 26px; }
-        .brand strong { font-size: .82rem; }
-        .brand span { display: none; }
-        .header-clock { font-size: .64rem; padding: 5px 9px; }
-        .header-clock i { display: none; }
-        .theme-toggle { padding: 2px; }
-        .theme-track { width: 38px; height: 21px; }
-        .theme-thumb { width: 15px; height: 15px; }
-        .theme-track.is-dark .theme-thumb { transform: translateX(17px); }
+        header { padding: 0 12px; }
+        .header-clock { font-size: .66rem; }
         .who { gap: 6px; }
-        .who .user-chip { padding: 3px 8px 3px 3px; gap: 6px; }
-        .who .user-avatar { width: 21px; height: 21px; font-size: .62rem; }
         .who .user-chip .name { display: none; }
-        .who button.logout span { display: none; }
-        .who button.logout { padding: 7px 10px; }
         main { padding: 18px 14px 40px; }
         .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
         .stat-tile { padding: 12px 14px; gap: 10px; }
@@ -283,6 +270,7 @@ $cardMeta = [
         .svc-grid { gap: 14px; }
     }
     @media (max-width: 420px) {
+        .header-clock { display: none; }
         .stats-row { grid-template-columns: 1fr 1fr; }
     }
 </style>
@@ -299,8 +287,8 @@ $cardMeta = [
     <div class="who">
         <span class="header-clock" id="liveClock"><i class="fas fa-clock"></i> <span id="liveClockText"></span></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <span class="theme-track" id="themeTrack">
-                <span class="theme-thumb"><i class="fas fa-sun" id="themeIcon" style="color:#101a3a;"></i></span>
+            <span class="theme-track">
+                <i class="fas fa-sun"></i><i class="fas fa-moon"></i>
             </span>
         </button>
         <div class="user-chip">
@@ -385,15 +373,10 @@ $cardMeta = [
 // (public/citizendash.php) so a preference set on either side carries over.
 (function () {
     var html = document.documentElement;
-    var track = document.getElementById('themeTrack');
-    var icon = document.getElementById('themeIcon');
     var btn = document.getElementById('themeToggle');
 
     function apply(isDark) {
         if (isDark) { html.setAttribute('data-theme', 'dark'); } else { html.removeAttribute('data-theme'); }
-        track.classList.toggle('is-dark', isDark);
-        icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-        icon.style.color = isDark ? '#fff' : '#101a3a';
         try {
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             localStorage.setItem('theme_backup', isDark ? 'dark' : 'light');
