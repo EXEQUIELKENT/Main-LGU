@@ -288,6 +288,7 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         --text-primary: #101a3a;
         --text-secondary: #5b6690;
         --input-bg: rgba(255,255,255,.7);
+        --input-bg-solid: #eef1fb;
         --input-border: rgba(80,100,180,.24);
         --input-placeholder: #8992b8;
         --scrollbar-track: #eef1fb;
@@ -300,6 +301,7 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         --text-primary: #fff;
         --text-secondary: #8b95c0;
         --input-bg: rgba(6,12,30,.55);
+        --input-bg-solid: #0d1530;
         --input-border: rgba(120,140,220,.22);
         --input-placeholder: #5b6690;
         --scrollbar-track: #0a1628;
@@ -426,6 +428,21 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     }
     input::placeholder { color: var(--input-placeholder); }
     input:focus { outline: none; border-color: #4f6ef7; box-shadow: 0 0 0 3px rgba(79,110,247,.18); }
+    /* Browsers paint autofilled fields with their own white/yellow
+       background that normal `background` can't override — this inset
+       box-shadow trick paints over it with the theme's own input color,
+       and the absurdly long transition delays the repaint indefinitely
+       so it never flashes white first. */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px var(--input-bg-solid) inset !important;
+        box-shadow: 0 0 0 1000px var(--input-bg-solid) inset !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        caret-color: var(--text-primary);
+        transition: background-color 5000s ease-in-out 0s, box-shadow 5000s ease-in-out 0s;
+    }
     .input-box.has-toggle input { padding-right: 42px; }
     .toggle-eye {
         position: absolute; right: 10px; top: 34px; background: none; border: none; cursor: pointer;
