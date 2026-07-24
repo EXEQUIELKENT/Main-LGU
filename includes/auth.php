@@ -11,6 +11,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+define('SUPER_ADMIN_SESSION_TIMEOUT', 120); // 2 minutes
+
 function is_super_admin_logged_in(): bool
 {
     return !empty($_SESSION['super_admin_id']);
@@ -22,4 +24,13 @@ function require_super_admin(): void
         header('Location: login.php');
         exit;
     }
+
+    if (isset($_SESSION['super_admin_last_activity']) && (time() - $_SESSION['super_admin_last_activity']) > SUPER_ADMIN_SESSION_TIMEOUT) {
+        $_SESSION = [];
+        session_destroy();
+        header('Location: login.php?timeout=1');
+        exit;
+    }
+
+    $_SESSION['super_admin_last_activity'] = time();
 }

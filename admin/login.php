@@ -32,6 +32,10 @@ function renderNotification(): void
     unset($_SESSION['notification']);
 }
 
+if (isset($_GET['timeout'])) {
+    setNotification('info', 'You were signed out after 2 minutes of inactivity.');
+}
+
 // ── Consume a password-reset link ───────────────────────────────────────
 if (isset($_GET['reset_token'])) {
     $token = (string) $_GET['reset_token'];
@@ -273,26 +277,34 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
     :root {
-        --bg-scrim: linear-gradient(160deg, rgba(238,241,251,.93) 0%, rgba(245,247,253,.90) 55%, rgba(255,255,255,.88) 100%);
-        --card-bg: rgba(255,255,255,.82);
+        --bg-scrim: linear-gradient(160deg, rgba(238,241,251,.62) 0%, rgba(245,247,253,.55) 55%, rgba(255,255,255,.5) 100%);
+        --card-bg: rgba(255,255,255,.86);
         --card-border: rgba(80,100,180,.18);
         --text-primary: #101a3a;
         --text-secondary: #5b6690;
         --input-bg: rgba(255,255,255,.7);
         --input-border: rgba(80,100,180,.24);
         --input-placeholder: #8992b8;
+        --scrollbar-track: #eef1fb;
+        --scrollbar-thumb: #1a56db;
     }
     [data-theme="dark"] {
-        --bg-scrim: linear-gradient(160deg, rgba(5,10,25,.90) 0%, rgba(10,22,40,.87) 55%, rgba(13,31,60,.85) 100%);
-        --card-bg: rgba(15,22,48,.72);
+        --bg-scrim: linear-gradient(160deg, rgba(5,10,25,.72) 0%, rgba(10,22,40,.68) 55%, rgba(13,31,60,.64) 100%);
+        --card-bg: rgba(15,22,48,.78);
         --card-border: rgba(120,140,220,.18);
         --text-primary: #fff;
         --text-secondary: #8b95c0;
         --input-bg: rgba(6,12,30,.55);
         --input-border: rgba(120,140,220,.22);
         --input-placeholder: #5b6690;
+        --scrollbar-track: #0a1628;
+        --scrollbar-thumb: #1a56db;
     }
     * { box-sizing: border-box; }
+    html { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
     body {
         margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
         font-family: 'Poppins', system-ui, sans-serif;
@@ -335,11 +347,12 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 
     .auth-shell { position: relative; z-index: 1; width: 100%; max-width: 420px; }
     .brand-row {
-        display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 22px;
+        display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 26px;
+        flex-direction: column; text-align: center;
     }
-    .brand-row img { width: 42px; height: 42px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
-    .brand-row .brand-text strong { display: block; color: var(--text-primary); font-size: 1.02rem; letter-spacing: .01em; }
-    .brand-row .brand-text span { display: block; color: var(--text-secondary); font-size: .75rem; }
+    .brand-row img { width: 48px; height: 48px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .brand-row .brand-text strong { display: block; color: var(--text-primary); font-size: 1.1rem; letter-spacing: .01em; }
+    .brand-row .brand-text span { display: block; color: var(--text-secondary); font-size: .78rem; margin-top: 2px; }
 
     .card {
         background: var(--card-bg);
@@ -351,8 +364,8 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
         box-shadow: 0 24px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04);
         transition: background .3s, border-color .3s;
     }
-    h1 { color: var(--text-primary); font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; }
-    p.sub { color: var(--text-secondary); margin: 0 0 26px; font-size: .88rem; }
+    h1 { color: var(--text-primary); font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; text-align: center; }
+    p.sub { color: var(--text-secondary); margin: 0 0 26px; font-size: .88rem; text-align: center; }
 
     label { display: block; color: var(--text-secondary); font-size: .8rem; font-weight: 500; margin-bottom: 7px; letter-spacing: .02em; }
     .input-box { position: relative; margin-bottom: 18px; }
@@ -437,6 +450,25 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
     .modal-card h2 { color: var(--text-primary); font-size: 1.15rem; margin: 0 0 4px; text-align: center; }
     .modal-card p.modal-sub { color: var(--text-secondary); font-size: .82rem; margin: 0 0 22px; text-align: center; }
     .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+
+    /* ── Mobile ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+        body { padding: 14px; align-items: flex-start; }
+        .top-bar {
+            position: static; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+        }
+        .back-link { font-size: .78rem; padding: 8px 14px; }
+        .back-link span, .back-link { white-space: nowrap; }
+        .top-actions { gap: 10px; }
+        .live-clock { font-size: .7rem; padding: 8px 12px; }
+        .auth-shell { max-width: 100%; margin-top: 4px; }
+        .card { padding: 28px 22px; border-radius: 18px; }
+        h1 { font-size: 1.25rem; }
+        .otp-boxes input { font-size: 1.15rem; }
+    }
+    @media (max-width: 380px) {
+        .back-link .back-label { display: none; }
+    }
 </style>
 </head>
 <body>
@@ -445,7 +477,7 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 <?php renderNotification(); ?>
 
 <div class="top-bar">
-    <a class="back-link" href="../public/citizendash.php"><i class="fas fa-arrow-left"></i> Back to InfraGovServices</a>
+    <a class="back-link" href="../public/citizendash.php"><i class="fas fa-arrow-left"></i> <span class="back-label">Back to InfraGovServices</span></a>
     <div class="top-actions">
         <span class="live-clock" id="liveClock"></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -457,15 +489,15 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 </div>
 
 <div class="auth-shell">
-    <div class="brand-row">
-        <img src="../public/logocityhall.png" alt="InfraGovServices">
-        <div class="brand-text">
-            <strong>InfraGovServices</strong>
-            <span>Super Admin · SSO Hub</span>
-        </div>
-    </div>
-
     <div class="card">
+        <div class="brand-row">
+            <img src="../public/logocityhall.png" alt="InfraGovServices">
+            <div class="brand-text">
+                <strong>InfraGovServices</strong>
+                <span>Super Admin · SSO Hub</span>
+            </div>
+        </div>
+
         <?php if (!$showOtpForm): ?>
             <h1>Sign in</h1>
             <p class="sub">Access the admin side of every connected system.</p>
