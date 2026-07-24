@@ -453,15 +453,15 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 
     /* ── Mobile ─────────────────────────────────────────── */
     @media (max-width: 640px) {
-        body { padding: 14px; align-items: flex-start; }
+        body { padding: 14px; flex-direction: column; align-items: stretch; justify-content: flex-start; }
         .top-bar {
-            position: static; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+            position: static; width: 100%; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
         }
         .back-link { font-size: .78rem; padding: 8px 14px; }
         .back-link span, .back-link { white-space: nowrap; }
         .top-actions { gap: 10px; }
         .live-clock { font-size: .7rem; padding: 8px 12px; }
-        .auth-shell { max-width: 100%; margin-top: 4px; }
+        .auth-shell { max-width: 100%; width: 100%; margin: 0 auto; }
         .card { padding: 28px 22px; border-radius: 18px; }
         h1 { font-size: 1.25rem; }
         .otp-boxes input { font-size: 1.15rem; }

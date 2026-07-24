@@ -258,17 +258,28 @@ $cardMeta = [
 
     /* ── Mobile ─────────────────────────────────────────────── */
     @media (max-width: 768px) {
-        header { padding: 12px 18px; }
+        header { padding: 8px 14px; gap: 8px; row-gap: 6px; }
+        .brand { gap: 8px; }
+        .brand img { width: 26px; height: 26px; }
+        .brand strong { font-size: .82rem; }
         .brand span { display: none; }
-        .header-clock { font-size: .68rem; padding: 6px 10px; }
-        .who { gap: 8px; }
+        .header-clock { font-size: .64rem; padding: 5px 9px; }
+        .header-clock i { display: none; }
+        .theme-toggle { padding: 2px; }
+        .theme-track { width: 38px; height: 21px; }
+        .theme-thumb { width: 15px; height: 15px; }
+        .theme-track.is-dark .theme-thumb { transform: translateX(17px); }
+        .who { gap: 6px; }
+        .who .user-chip { padding: 3px 8px 3px 3px; gap: 6px; }
+        .who .user-avatar { width: 21px; height: 21px; font-size: .62rem; }
         .who .user-chip .name { display: none; }
         .who button.logout span { display: none; }
-        .who button.logout { padding: 9px 12px; }
-        main { padding: 22px 16px 40px; }
-        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 26px; }
-        .stat-tile { padding: 14px 16px; }
-        .stat-tile .value { font-size: 1.15rem; }
+        .who button.logout { padding: 7px 10px; }
+        main { padding: 18px 14px 40px; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+        .stat-tile { padding: 12px 14px; gap: 10px; }
+        .stat-icon { width: 34px; height: 34px; font-size: .9rem; }
+        .stat-tile .value { font-size: 1.05rem; }
         .svc-grid { gap: 14px; }
     }
     @media (max-width: 420px) {
