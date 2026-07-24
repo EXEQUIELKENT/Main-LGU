@@ -2,24 +2,11 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/system_stats.php';
+require_once __DIR__ . '/../includes/system_display.php';
 require_super_admin();
 
 $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fetchAll();
 $systemStats = fetchAllSystemStats($systems);
-
-// Mirrors the "Explore Departments" card styling/colors on the public
-// citizendash.php page (.db-svc3-*) so the admin side feels like the same
-// product instead of a bolted-on tool.
-$cardMeta = [
-    'ipms' => ['theme' => 'blue', 'icon' => 'fa-hard-hat', 'tag' => 'IPMS', 'num' => '01'],
-    'roadmon' => ['theme' => 'orange', 'icon' => 'fa-road', 'tag' => 'RGMAP', 'num' => '02'],
-    'cprf' => ['theme' => 'purple', 'icon' => 'fa-calendar-check', 'tag' => 'CPRF', 'num' => '03'],
-    'cimm' => ['theme' => 'rose', 'icon' => 'fa-tools', 'tag' => 'CIMM', 'num' => '04'],
-    'energy' => ['theme' => 'teal', 'icon' => 'fa-leaf', 'tag' => 'ECM', 'num' => '05'],
-];
-$statIconMeta = [
-    'ipms' => 'blue', 'roadmon' => 'amber', 'cprf' => 'purple', 'cimm' => 'green', 'energy' => 'teal',
-];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -182,6 +169,16 @@ $statIconMeta = [
 
     main { max-width: 1300px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
 
+    .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .admin-tab {
+        display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
+        background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-secondary);
+        text-decoration: none; font-size: .84rem; font-weight: 500; transition: background .2s, color .2s;
+        backdrop-filter: blur(14px);
+    }
+    .admin-tab:hover { background: rgba(79,110,247,.12); color: var(--text-primary); }
+    .admin-tab.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; border-color: transparent; }
+
     @keyframes dashCardIn {
         from { opacity: 0; transform: translateY(18px) scale(.97); }
         to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -205,7 +202,9 @@ $statIconMeta = [
     .stat-icon.blue   { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
     .stat-icon.green  { background: linear-gradient(135deg,#10b981,#047857); }
     .stat-icon.amber  { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .stat-icon.orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
     .stat-icon.purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+    .stat-icon.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .stat-icon.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
     .stat-tile .stat-fallback { color: var(--text-secondary); font-size: .95rem; font-weight: 500; }
     .stat-tile .label { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
@@ -357,14 +356,18 @@ $statIconMeta = [
     </div>
 </header>
 <main>
+    <nav class="admin-tabs">
+        <a href="dashboard.php" class="admin-tab active"><i class="fas fa-gauge"></i> Dashboard</a>
+        <a href="systems.php" class="admin-tab"><i class="fas fa-server"></i> Connected Systems</a>
+        <a href="launch_history.php" class="admin-tab"><i class="fas fa-clock-rotate-left"></i> Launch History</a>
+    </nav>
+
     <div class="stats-row">
     <?php foreach ($systems as $system):
-        $meta = $cardMeta[$system['slug']] ?? ['icon' => 'fa-server'];
-        $iconColor = $statIconMeta[$system['slug']] ?? 'blue';
         $stat = $systemStats[$system['slug']] ?? null;
     ?>
         <div class="stat-tile">
-            <div class="stat-icon <?= $iconColor ?>"><i class="fas <?= $meta['icon'] ?>"></i></div>
+            <div class="stat-icon <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
             <div>
                 <div class="label"><?= htmlspecialchars($stat['label'] ?? $system['name']) ?></div>
                 <?php if ($stat !== null): ?>
@@ -378,15 +381,16 @@ $statIconMeta = [
     </div>
 
     <div class="svc-grid">
-    <?php foreach ($systems as $system):
-        $meta = $cardMeta[$system['slug']] ?? ['theme' => 'blue', 'icon' => 'fa-server', 'tag' => strtoupper($system['slug']), 'num' => '00'];
+    <?php foreach ($systems as $i => $system):
         $host = parse_url($system['base_url'], PHP_URL_HOST) ?: $system['base_url'];
+        $num = str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
+        $tag = $system['short_tag'] !== '' ? $system['short_tag'] : strtoupper($system['slug']);
     ?>
-        <a class="svc-card svc-<?= $meta['theme'] ?> launch-trigger" href="launch.php?system=<?= urlencode($system['slug']) ?>" data-system-name="<?= htmlspecialchars($system['name']) ?>">
-            <div class="svc-bg-num"><?= $meta['num'] ?></div>
+        <a class="svc-card svc-<?= htmlspecialchars($system['theme_color']) ?> launch-trigger" href="launch.php?system=<?= urlencode($system['slug']) ?>" data-system-name="<?= htmlspecialchars($system['name']) ?>">
+            <div class="svc-bg-num"><?= $num ?></div>
             <div class="svc-top">
-                <div class="svc-chip"><i class="fas <?= $meta['icon'] ?>"></i></div>
-                <span class="svc-tag"><?= htmlspecialchars($meta['tag']) ?></span>
+                <div class="svc-chip"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
+                <span class="svc-tag"><?= htmlspecialchars($tag) ?></span>
             </div>
             <div class="svc-body">
                 <h3 class="svc-title"><?= htmlspecialchars($system['name']) ?></h3>

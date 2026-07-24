@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS connected_systems (
     sso_consume_path VARCHAR(255) NOT NULL,
     stats_path VARCHAR(255) DEFAULT NULL,
     shared_secret VARCHAR(64) NOT NULL,
-    is_active TINYINT(1) NOT NULL DEFAULT 1
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    icon VARCHAR(50) NOT NULL DEFAULT 'fa-server',
+    theme_color VARCHAR(20) NOT NULL DEFAULT 'blue',
+    short_tag VARCHAR(20) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sso_launch_log (
@@ -38,10 +41,10 @@ CREATE TABLE IF NOT EXISTS sso_launch_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Seed the 5 connected systems (local XAMPP URLs; update base_url when deployed to *.infragovservices.com)
-INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active) VALUES
-('roadmon', 'Road Monitoring (RGMAP)', 'http://localhost/lg-road-monitoring', '/pages/admin/admin_dashboard.php', '/lgu_staff/sso_consume.php', '/lgu_staff/stats.php', '98e6d66778fb43ef152d69caf81b793ecc55368b9ee8357eac64246e73c7e64e', 1),
-('ipms', 'IPMS', 'http://localhost/ipms_lgu', '/superadmin/dashboard.php', '/auth/sso_consume.php', '/stats.php', 'f56d2000a6be7cde816cb174274824462644e2255e9ee39b4946d166a933e490', 1),
-('energy', 'Energy', 'http://localhost/Lgu1-energy', '/dashboard', '/sso/consume', '/api/stats', '400f214e72c54090af8b91ede0c17a23bad10f298b60cfea55d546cb8a44752a', 1),
-('cprf', 'CPRF (Facilities Reservation)', 'http://localhost/facilities-reservation-system1', '/dashboard', '/sso/consume', '/api/stats', '6724201881389f70d4d233dcd87caa15d507ebfd56f3fc73e0ad2b1c61e2d825', 1),
-('cimm', 'CIMM', 'http://localhost/LGU', '/lgu-portal/public/admin/employee.php', '/lgu-portal/public/admin/sso_consume.php', '/lgu-portal/public/api/stats.php', '4b846cf9286c6a7d2dbd099b4033552ed162b08559f93624f69d48e1029092a6', 1)
-ON DUPLICATE KEY UPDATE name = VALUES(name), stats_path = VALUES(stats_path);
+INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag) VALUES
+('roadmon', 'Road Monitoring (RGMAP)', 'http://localhost/lg-road-monitoring', '/pages/admin/admin_dashboard.php', '/lgu_staff/sso_consume.php', '/lgu_staff/stats.php', '98e6d66778fb43ef152d69caf81b793ecc55368b9ee8357eac64246e73c7e64e', 1, 'fa-road', 'orange', 'RGMAP'),
+('ipms', 'IPMS', 'http://localhost/ipms_lgu', '/superadmin/dashboard.php', '/auth/sso_consume.php', '/stats.php', 'f56d2000a6be7cde816cb174274824462644e2255e9ee39b4946d166a933e490', 1, 'fa-hard-hat', 'blue', 'IPMS'),
+('energy', 'Energy', 'http://localhost/Lgu1-energy', '/dashboard', '/sso/consume', '/api/stats', '400f214e72c54090af8b91ede0c17a23bad10f298b60cfea55d546cb8a44752a', 1, 'fa-leaf', 'teal', 'ECM'),
+('cprf', 'CPRF (Facilities Reservation)', 'http://localhost/facilities-reservation-system1', '/dashboard', '/sso/consume', '/api/stats', '6724201881389f70d4d233dcd87caa15d507ebfd56f3fc73e0ad2b1c61e2d825', 1, 'fa-calendar-check', 'purple', 'CPRF'),
+('cimm', 'CIMM', 'http://localhost/LGU', '/lgu-portal/public/admin/employee.php', '/lgu-portal/public/admin/sso_consume.php', '/lgu-portal/public/api/stats.php', '4b846cf9286c6a7d2dbd099b4033552ed162b08559f93624f69d48e1029092a6', 1, 'fa-tools', 'rose', 'CIMM')
+ON DUPLICATE KEY UPDATE name = VALUES(name), stats_path = VALUES(stats_path), icon = VALUES(icon), theme_color = VALUES(theme_color), short_tag = VALUES(short_tag);
