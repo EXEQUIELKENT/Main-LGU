@@ -301,6 +301,10 @@ $statIconMeta = [
         border: 1.5px solid rgba(239,68,68,.28); display: flex; align-items: center; justify-content: center;
         color: #ef4444; font-size: 1.3rem;
     }
+    .modal-icon-wrap--info {
+        background: linear-gradient(135deg, rgba(79,110,247,.18), rgba(79,110,247,.08));
+        border-color: rgba(79,110,247,.3); color: #4f6ef7;
+    }
     .modal-card h2 { color: var(--text-primary); font-size: 1.05rem; margin: 0 0 8px; }
     .modal-card p.modal-sub { color: var(--text-secondary); font-size: .85rem; margin: 0 0 22px; line-height: 1.5; }
     .modal-actions { display: flex; gap: 10px; }
@@ -311,7 +315,9 @@ $statIconMeta = [
     .modal-actions .btn-cancel { background: rgba(120,140,220,.14); color: var(--text-primary); border: 1px solid var(--card-border); }
     .modal-actions .btn-cancel:hover { background: rgba(120,140,220,.22); }
     .modal-actions .btn-confirm { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,.35); }
+    .modal-actions .btn-confirm--info { background: linear-gradient(135deg,#4f6ef7,#3f5adf); box-shadow: 0 4px 14px rgba(63,90,223,.35); }
     .modal-actions .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(239,68,68,.45); }
+    .modal-actions .btn-confirm--info:hover { box-shadow: 0 6px 18px rgba(63,90,223,.45); }
 
     /* ── Mobile: content sizing ────────────────────────────── */
     @media (max-width: 768px) {
@@ -376,7 +382,7 @@ $statIconMeta = [
         $meta = $cardMeta[$system['slug']] ?? ['theme' => 'blue', 'icon' => 'fa-server', 'tag' => strtoupper($system['slug']), 'num' => '00'];
         $host = parse_url($system['base_url'], PHP_URL_HOST) ?: $system['base_url'];
     ?>
-        <a class="svc-card svc-<?= $meta['theme'] ?>" href="launch.php?system=<?= urlencode($system['slug']) ?>">
+        <a class="svc-card svc-<?= $meta['theme'] ?> launch-trigger" href="launch.php?system=<?= urlencode($system['slug']) ?>" data-system-name="<?= htmlspecialchars($system['name']) ?>">
             <div class="svc-bg-num"><?= $meta['num'] ?></div>
             <div class="svc-top">
                 <div class="svc-chip"><i class="fas <?= $meta['icon'] ?>"></i></div>
@@ -394,6 +400,19 @@ $statIconMeta = [
     <?php endforeach; ?>
     </div>
 </main>
+
+<!-- Launch confirmation modal -->
+<div class="modal-backdrop" id="launchModal">
+    <div class="modal-card">
+        <div class="modal-icon-wrap modal-icon-wrap--info"><i class="fas fa-arrow-up-right-from-square"></i></div>
+        <h2>Open <span id="launchSystemName">this system</span>'s admin?</h2>
+        <p class="modal-sub">You'll be signed into its admin panel using your Super Admin session. Continue?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelLaunch">Cancel</button>
+            <button type="button" class="btn-confirm btn-confirm--info" id="confirmLaunch">Open Admin</button>
+        </div>
+    </div>
+</div>
 
 <!-- Logout confirmation modal -->
 <div class="modal-backdrop" id="logoutModal">
@@ -451,6 +470,32 @@ $statIconMeta = [
     document.getElementById('openLogoutModal').addEventListener('click', function () { modal.classList.add('show'); });
     document.getElementById('cancelLogout').addEventListener('click', function () { modal.classList.remove('show'); });
     document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
+})();
+
+// Launch confirmation modal — every "Open Admin" card asks before handing
+// off into that system's admin panel via SSO.
+(function () {
+    var modal = document.getElementById('launchModal');
+    var nameEl = document.getElementById('launchSystemName');
+    var confirmBtn = document.getElementById('confirmLaunch');
+    var pendingUrl = null;
+
+    document.querySelectorAll('.launch-trigger').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+            e.preventDefault();
+            pendingUrl = card.getAttribute('href');
+            nameEl.textContent = card.dataset.systemName || 'this system';
+            modal.classList.add('show');
+        });
+    });
+
+    document.getElementById('cancelLaunch').addEventListener('click', function () {
+        modal.classList.remove('show');
+        pendingUrl = null;
+    });
+    confirmBtn.addEventListener('click', function () {
+        if (pendingUrl) window.location.href = pendingUrl;
+    });
 })();
 
 // Client-side mirror of the 2-minute server-side session timeout
