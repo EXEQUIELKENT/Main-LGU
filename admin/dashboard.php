@@ -72,6 +72,7 @@ $systemStats = fetchAllSystemStats($systems);
     }
     .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
     .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
+    .sidebar.collapsed .sidebar-header { justify-content: center; }
     .sidebar-toggle {
         width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
         background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
@@ -171,6 +172,7 @@ $systemStats = fetchAllSystemStats($systems);
         .sidebar.collapsed .sidebar-user span.uname,
         .sidebar.collapsed .sidebar-logout span { display: block; }
         .sidebar-header { display: none; }
+        .sidebar-logo { padding-top: 64px; }
         .mobile-toggle { display: flex; }
         .topbar, .main-content, .sidebar.collapsed ~ .topbar, .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
         .topbar {

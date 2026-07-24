@@ -122,6 +122,7 @@ function buildQuery(array $overrides): string
     }
     .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
     .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
+    .sidebar.collapsed .sidebar-header { justify-content: center; }
     .sidebar-toggle {
         width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
         background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
@@ -218,6 +219,7 @@ function buildQuery(array $overrides): string
         .sidebar.collapsed .sidebar-user span.uname,
         .sidebar.collapsed .sidebar-logout span { display: block; }
         .sidebar-header { display: none; }
+        .sidebar-logo { padding-top: 64px; }
         .mobile-toggle { display: flex; }
         .topbar, .main-content, .sidebar.collapsed ~ .topbar, .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
         .topbar {
@@ -243,14 +245,14 @@ function buildQuery(array $overrides): string
         .theme-thumb .fa-moon { color: #93c5fd; }
     }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
+    main { max-width: 1600px; margin: 0 auto; padding: 34px 40px 60px; position: relative; z-index: 1; }
 
     h1 { font-size: 1.15rem; color: var(--text-primary); margin: 0 0 20px; }
 
     .filters {
         display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px;
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px;
-        backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px); position: relative; z-index: 20;
     }
     .filters .field { display: flex; flex-direction: column; gap: 6px; }
     .filters label { font-size: .72rem; color: var(--text-secondary); font-weight: 500; }
@@ -284,8 +286,8 @@ function buildQuery(array $overrides): string
     }
     .combobox-dropdown.open { display: block; }
     .combobox-search-wrap { position: relative; padding: 6px; border-bottom: 1px solid var(--card-border); }
-    .combobox-search-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: .72rem; }
-    .combobox-search { width: 100%; padding: 7px 10px 7px 26px; border: none; background: transparent; color: var(--text-primary); font-size: .8rem; outline: none; font-family: inherit; }
+    .combobox-search-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: .72rem; pointer-events: none; }
+    .combobox-search { width: 100%; padding: 9px 10px 9px 34px; border: none; background: transparent; color: var(--text-primary); font-size: .8rem; outline: none; font-family: inherit; }
     .combobox-list { max-height: 200px; overflow-y: auto; }
     .combobox-option { padding: 9px 14px; font-size: .82rem; cursor: pointer; color: var(--text-primary); transition: background .12s; }
     .combobox-option:hover, .combobox-option.highlighted { background: rgba(79,110,247,.1); }
@@ -571,7 +573,7 @@ function buildQuery(array $overrides): string
 
 <!-- Logout confirmation modal -->
 <div class="modal-backdrop" id="logoutModal" style="position:fixed; inset:0; background:rgba(3,6,16,.55); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px;">
-    <div class="modal-card" style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:30px 26px 24px; max-width:340px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,.4); backdrop-filter:blur(22px); text-align:center;">
+    <div class="modal-card" style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:30px 26px 24px; max-width:340px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,.4); backdrop-filter:blur(22px); text-align:center; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);">
         <div style="width:60px; height:60px; border-radius:50%; margin:0 auto 16px; background:linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.08)); border:1.5px solid rgba(239,68,68,.28); display:flex; align-items:center; justify-content:center; color:#ef4444; font-size:1.3rem;"><i class="fas fa-arrow-right-from-bracket"></i></div>
         <h2 style="color:var(--text-primary); font-size:1.05rem; margin:0 0 8px;">Log out of your account?</h2>
         <p style="color:var(--text-secondary); font-size:.85rem; margin:0 0 22px; line-height:1.5;">Are you sure you want to log out? You'll need to sign in again to access any connected system.</p>
@@ -581,7 +583,10 @@ function buildQuery(array $overrides): string
         </div>
     </div>
 </div>
-<style>.modal-backdrop.show { display: flex !important; }</style>
+<style>
+.modal-backdrop.show { display: flex !important; }
+@keyframes modalPop { from { transform: translateY(20px) scale(.94); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+</style>
 
 <script>
 // Sidebar: desktop collapse (persisted) + mobile slide-in drawer

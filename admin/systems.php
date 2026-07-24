@@ -165,6 +165,7 @@ unset($_SESSION['reveal_secret']);
     }
     .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
     .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
+    .sidebar.collapsed .sidebar-header { justify-content: center; }
     .sidebar-toggle {
         width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
         background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
@@ -261,6 +262,7 @@ unset($_SESSION['reveal_secret']);
         .sidebar.collapsed .sidebar-user span.uname,
         .sidebar.collapsed .sidebar-logout span { display: block; }
         .sidebar-header { display: none; }
+        .sidebar-logo { padding-top: 64px; }
         .mobile-toggle { display: flex; }
         .topbar, .main-content, .sidebar.collapsed ~ .topbar, .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
         .topbar {
@@ -286,7 +288,7 @@ unset($_SESSION['reveal_secret']);
         .theme-thumb .fa-moon { color: #93c5fd; }
     }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
+    main { max-width: 1600px; margin: 0 auto; padding: 34px 40px 60px; position: relative; z-index: 1; }
 
     .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .page-head h1 { font-size: 1.15rem; color: var(--text-primary); margin: 0; }
