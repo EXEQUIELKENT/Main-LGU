@@ -86,6 +86,7 @@ function buildQuery(array $overrides): string
         --input-border: rgba(80,100,180,.22);
         --scrollbar-track: #eef1fb;
         --scrollbar-thumb: #1a56db;
+        --dropdown-bg: #ffffff;
     }
     [data-theme="dark"] {
         --bg-scrim: linear-gradient(160deg, rgba(5,10,25,.78) 0%, rgba(10,22,40,.74) 55%, rgba(13,31,60,.70) 100%);
@@ -98,6 +99,7 @@ function buildQuery(array $overrides): string
         --input-border: rgba(120,140,220,.22);
         --scrollbar-track: #0a1628;
         --scrollbar-thumb: #1a56db;
+        --dropdown-bg: #10182f;
     }
     * { box-sizing: border-box; }
     html { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
@@ -113,7 +115,7 @@ function buildQuery(array $overrides): string
         background-attachment: fixed, fixed;
     }
     /* ── Sidebar (desktop: fixed left column, collapsible; mobile: slide-in drawer) ── */
-    :root { --sidebar-w: 240px; --sidebar-w-collapsed: 72px; }
+    :root { --sidebar-w: 208px; --sidebar-w-collapsed: 64px; }
     .sidebar {
         position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; z-index: 500;
         background: var(--card-bg); border-right: 1px solid var(--card-border);
@@ -280,14 +282,14 @@ function buildQuery(array $overrides): string
     .combobox-display.open .combobox-arrow { transform: rotate(180deg); }
     .combobox-dropdown {
         position: absolute; top: 100%; left: 0; width: 100%; z-index: 1000;
-        background: var(--card-bg); border: 1.5px solid #4f6ef7; border-top: none;
+        background: var(--dropdown-bg); border: 1.5px solid #4f6ef7; border-top: none;
         border-radius: 0 0 8px 8px; box-shadow: 0 14px 30px rgba(0,0,0,.22);
-        display: none; backdrop-filter: blur(22px);
+        display: none;
     }
     .combobox-dropdown.open { display: block; }
     .combobox-search-wrap { position: relative; padding: 6px; border-bottom: 1px solid var(--card-border); }
-    .combobox-search-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: .72rem; pointer-events: none; }
-    .combobox-search { width: 100%; padding: 9px 10px 9px 34px; border: none; background: transparent; color: var(--text-primary); font-size: .8rem; outline: none; font-family: inherit; }
+    .combobox-search-wrap i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: .72rem; pointer-events: none; }
+    .combobox-search { width: 100%; padding: 9px 10px 9px 40px; border: none; background: transparent; color: var(--text-primary); font-size: .8rem; outline: none; font-family: inherit; }
     .combobox-list { max-height: 200px; overflow-y: auto; }
     .combobox-option { padding: 9px 14px; font-size: .82rem; cursor: pointer; color: var(--text-primary); transition: background .12s; }
     .combobox-option:hover, .combobox-option.highlighted { background: rgba(79,110,247,.1); }
@@ -649,6 +651,9 @@ function buildQuery(array $overrides): string
     document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
 })();
 
+<?php if (!SUPER_ADMIN_IS_LOCALHOST): ?>
+// Client-side mirror of the 2-minute server-side session timeout.
+// Disabled on localhost, where the server-side timeout is also disabled.
 (function () {
     var TIMEOUT_MS = 120 * 1000;
     var timer = null;
@@ -661,6 +666,7 @@ function buildQuery(array $overrides): string
     });
     resetTimer();
 })();
+<?php endif; ?>
 
 // Searchable dropdown (System filter) — CIMM-style combobox
 (function () {

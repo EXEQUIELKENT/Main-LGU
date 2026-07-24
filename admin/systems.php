@@ -958,7 +958,9 @@ setTimeout(closeNotif, 4500);
     });
 })();
 
-// Client-side mirror of the 2-minute server-side session timeout
+<?php if (!SUPER_ADMIN_IS_LOCALHOST): ?>
+// Client-side mirror of the 2-minute server-side session timeout.
+// Disabled on localhost, where the server-side timeout is also disabled.
 (function () {
     var TIMEOUT_MS = 120 * 1000;
     var timer = null;
@@ -971,6 +973,7 @@ setTimeout(closeNotif, 4500);
     });
     resetTimer();
 })();
+<?php endif; ?>
 </script>
 </body>
 </html>

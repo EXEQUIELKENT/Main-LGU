@@ -23,6 +23,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 define('SUPER_ADMIN_SESSION_TIMEOUT', 120); // 2 minutes
 
+// Same localhost detection used by admin/login.php to skip the OTP step
+// during local development — the idle session timeout is disabled there
+// too, so devs aren't kicked back to the login screen every 2 minutes
+// while working locally.
+define('SUPER_ADMIN_IS_LOCALHOST', in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'], true));
+
 function is_super_admin_logged_in(): bool
 {
     return !empty($_SESSION['super_admin_id']);
@@ -35,7 +41,7 @@ function require_super_admin(): void
         exit;
     }
 
-    if (isset($_SESSION['super_admin_last_activity']) && (time() - $_SESSION['super_admin_last_activity']) > SUPER_ADMIN_SESSION_TIMEOUT) {
+    if (!SUPER_ADMIN_IS_LOCALHOST && isset($_SESSION['super_admin_last_activity']) && (time() - $_SESSION['super_admin_last_activity']) > SUPER_ADMIN_SESSION_TIMEOUT) {
         $_SESSION = [];
         session_destroy();
         header('Location: login.php?timeout=1');

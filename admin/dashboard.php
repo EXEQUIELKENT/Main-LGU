@@ -557,9 +557,11 @@ $systemStats = fetchAllSystemStats($systems);
     });
 })();
 
+<?php if (!SUPER_ADMIN_IS_LOCALHOST): ?>
 // Client-side mirror of the 2-minute server-side session timeout
 // (includes/auth.php). Purely a UX nicety — the server enforces the real
-// limit on the next request regardless of whether this fires.
+// limit on the next request regardless of whether this fires. Disabled on
+// localhost, where the server-side timeout is also disabled for dev.
 (function () {
     var TIMEOUT_MS = 120 * 1000;
     var timer = null;
@@ -576,6 +578,7 @@ $systemStats = fetchAllSystemStats($systems);
     });
     resetTimer();
 })();
+<?php endif; ?>
 </script>
 </body>
 </html>
