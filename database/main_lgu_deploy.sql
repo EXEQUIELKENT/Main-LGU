@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS super_admins (
     reset_token VARCHAR(64) DEFAULT NULL,
     reset_token_expires DATETIME DEFAULT NULL,
     failed_login_attempts INT NOT NULL DEFAULT 0,
+    locked_until DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

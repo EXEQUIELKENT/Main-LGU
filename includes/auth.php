@@ -1,4 +1,14 @@
 <?php
+// PHP's ini-configured timezone doesn't necessarily match MySQL's own
+// (SYSTEM) timezone — this box's PHP defaults to Europe/Berlin while MySQL's
+// NOW() runs in Asia/Manila, the LGU's actual timezone (same mismatch
+// already flagged and fixed this way elsewhere in this codebase suite, e.g.
+// ipms_lgu/includes/config.php). Without this, comparing PHP's time()
+// against a MySQL-generated DATETIME (e.g. super_admins.locked_until) is
+// off by the timezone gap — confirmed for real as a login-lockout countdown
+// showing "375 minutes" instead of 15.
+date_default_timezone_set('Asia/Manila');
+
 if (session_status() === PHP_SESSION_NONE) {
     // Distinct cookie name so this session can never collide with (or be
     // wiped by) a sibling system's own PHPSESSID cookie — e.g. on local

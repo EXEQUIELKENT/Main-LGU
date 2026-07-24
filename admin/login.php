@@ -11,6 +11,9 @@ if (is_super_admin_logged_in()) {
 $isLocalhost = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'], true);
 $requireOtp = !$isLocalhost;
 
+define('LOGIN_MAX_ATTEMPTS', 5);
+define('LOGIN_LOCKOUT_MINUTES', 15);
+
 function setNotification(string $type, string $message): void
 {
     $_SESSION['notification'] = ['type' => $type, 'message' => $message];
@@ -75,8 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             $admin = $stmt->fetch();
 
-            if ($admin && password_verify($password, $admin['password_hash'])) {
-                mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0 WHERE id = ?')->execute([$admin['id']]);
+            $isLocked = $admin && $admin['locked_until'] && strtotime($admin['locked_until']) > time();
+
+            if ($isLocked) {
+                $minutesLeft = (int) ceil((strtotime($admin['locked_until']) - time()) / 60);
+                setNotification('error', "Too many failed attempts. Try again in {$minutesLeft} minute" . ($minutesLeft === 1 ? '' : 's') . '.');
+            } elseif ($admin && password_verify($password, $admin['password_hash'])) {
+                mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?')->execute([$admin['id']]);
 
                 if (!$requireOtp) {
                     session_regenerate_id(true);
@@ -111,9 +119,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 if ($admin) {
-                    mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = failed_login_attempts + 1 WHERE id = ?')->execute([$admin['id']]);
+                    $attempts = $admin['failed_login_attempts'] + 1;
+                    if ($attempts >= LOGIN_MAX_ATTEMPTS) {
+                        mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?')
+                            ->execute([LOGIN_LOCKOUT_MINUTES, $admin['id']]);
+                        setNotification('error', 'Too many failed attempts. Your account is locked for ' . LOGIN_LOCKOUT_MINUTES . ' minutes.');
+                    } else {
+                        mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = ? WHERE id = ?')->execute([$attempts, $admin['id']]);
+                        setNotification('error', 'Invalid username or password.');
+                    }
+                } else {
+                    setNotification('error', 'Invalid username or password.');
                 }
-                setNotification('error', 'Invalid username or password.');
             }
         }
 
