@@ -155,19 +155,74 @@ unset($_SESSION['reveal_secret']);
         background-position: center, center;
         background-attachment: fixed, fixed;
     }
-    /* ── Desktop header ── */
-    header {
-        position: sticky; top: 0; z-index: 200;
+    /* ── Sidebar (desktop: fixed left column, collapsible; mobile: slide-in drawer) ── */
+    :root { --sidebar-w: 240px; --sidebar-w-collapsed: 72px; }
+    .sidebar {
+        position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; z-index: 500;
+        background: var(--card-bg); border-right: 1px solid var(--card-border);
+        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        display: flex; flex-direction: column; transition: width .3s ease, left .3s ease, background .3s;
+    }
+    .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+    .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
+    .sidebar-toggle {
+        width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+        background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-size: .78rem;
+        box-shadow: 0 3px 10px rgba(63,90,223,.35); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 18px 18px; }
+    .sidebar-logo img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
+    .sidebar-logo strong { display: block; color: var(--text-primary); font-size: .9rem; white-space: nowrap; }
+    .sidebar-logo span { display: block; color: var(--text-secondary); font-size: .68rem; white-space: nowrap; }
+    .sidebar.collapsed .sidebar-logo-text { display: none; }
+    .sidebar-nav-list { list-style: none; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .sidebar-link {
+        display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+        color: var(--text-secondary); text-decoration: none; font-size: .85rem; font-weight: 500;
+        white-space: nowrap; transition: background .2s, color .2s, transform .2s;
+    }
+    .sidebar-link i { width: 18px; text-align: center; flex-shrink: 0; }
+    .sidebar-link:hover { background: rgba(79,110,247,.1); color: var(--text-primary); }
+    .sidebar-link.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; box-shadow: 0 3px 10px rgba(63,90,223,.3); }
+    .sidebar.collapsed .sidebar-link { justify-content: center; padding: 11px; }
+    .sidebar.collapsed .sidebar-link span { display: none; }
+    .sidebar-bottom { border-top: 1px solid var(--card-border); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .sidebar-user .user-avatar {
+        width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
+        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0;
+    }
+    .sidebar-user span.uname { color: var(--text-primary); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar.collapsed .sidebar-user span.uname { display: none; }
+    .sidebar-logout {
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px;
+        border: 1px solid rgba(255,143,163,.3); background: none; color: #ff8fa3; cursor: pointer;
+        font-family: inherit; font-size: .82rem; font-weight: 500; transition: background .15s;
+    }
+    .sidebar-logout:hover { background: rgba(255,143,163,.1); }
+    .sidebar.collapsed .sidebar-logout { justify-content: center; padding: 10px; }
+    .sidebar.collapsed .sidebar-logout span { display: none; }
+    .sidebar-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(3,6,16,.5); z-index: 490;
+        opacity: 0; transition: opacity .3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+    .mobile-toggle {
+        display: none; position: fixed; top: 11px; left: 12px; z-index: 600;
+        width: 36px; height: 36px; border-radius: 9px; background: rgba(5,10,25,.9); color: #fff;
+        border: 1px solid rgba(255,255,255,.14); align-items: center; justify-content: center; cursor: pointer; font-size: .95rem;
+    }
+
+    .topbar {
+        position: sticky; top: 0; z-index: 200; margin-left: var(--sidebar-w);
         background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
         border-bottom: 1px solid var(--card-border);
-        padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
-        transition: background .3s, border-color .3s;
-        flex-wrap: wrap; gap: 12px;
+        padding: 12px 32px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+        transition: margin-left .3s ease, background .3s;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 36px; height: 36px; border-radius: 9px; }
-    .brand strong { color: var(--text-primary); font-size: 1rem; display: block; }
-    .brand span { color: var(--text-secondary); font-size: .74rem; }
+    .sidebar.collapsed ~ .topbar { margin-left: var(--sidebar-w-collapsed); }
 
     .header-clock {
         font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary);
@@ -176,25 +231,6 @@ unset($_SESSION['reveal_secret']);
     }
     .header-clock i { font-size: .72rem; opacity: .8; }
     .clock-date::after { content: ' · '; }
-
-    .who { display: flex; align-items: center; gap: 14px; }
-    .who .user-chip {
-        display: flex; align-items: center; gap: 9px;
-        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 5px 14px 5px 6px; border-radius: 50px;
-    }
-    .who .user-avatar {
-        width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
-        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700;
-        flex-shrink: 0;
-    }
-    .who .name { color: var(--text-secondary); font-size: .8rem; }
-    .who .name strong { color: var(--text-primary); }
-    .who button.logout {
-        color: #ff8fa3; background: none; font-size: .82rem; font-weight: 500; font-family: inherit;
-        border: 1px solid rgba(255,143,163,.35); padding: 8px 16px; border-radius: 50px; transition: background .15s;
-        cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
-    }
-    .who button.logout:hover { background: rgba(255,143,163,.1); }
 
     .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
     .theme-track {
@@ -213,28 +249,32 @@ unset($_SESSION['reveal_secret']);
     [data-theme="dark"] .theme-thumb .fa-sun { display: none; }
     [data-theme="dark"] .theme-thumb .fa-moon { display: inline; }
 
-    @media (max-width: 768px) {
-        header {
-            position: sticky; top: 0; height: 54px; padding: 0 14px; gap: 8px;
+    .main-content { margin-left: var(--sidebar-w); transition: margin-left .3s ease; }
+    .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-w-collapsed); }
+
+    @media (max-width: 900px) {
+        .sidebar { left: -100%; width: 260px; box-shadow: none; }
+        .sidebar.mobile-active { left: 0; box-shadow: 0 0 50px rgba(0,0,0,.45); }
+        .sidebar.collapsed { width: 260px; }
+        .sidebar.collapsed .sidebar-logo-text,
+        .sidebar.collapsed .sidebar-link span,
+        .sidebar.collapsed .sidebar-user span.uname,
+        .sidebar.collapsed .sidebar-logout span { display: block; }
+        .sidebar-header { display: none; }
+        .mobile-toggle { display: flex; }
+        .topbar, .main-content, .sidebar.collapsed ~ .topbar, .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+        .topbar {
+            height: 54px; padding: 0 14px 0 58px; gap: 8px;
             background: rgba(5,10,25,.94); border-bottom: 1px solid rgba(59,130,246,.2);
-            box-shadow: 0 2px 16px rgba(0,0,0,.5); justify-content: flex-end;
+            box-shadow: 0 2px 16px rgba(0,0,0,.5);
         }
-        .brand { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); gap: 0; }
-        .brand img { width: 26px; height: 26px; }
-        .brand strong, .brand span { display: none; }
-        .header-clock { background: none; border: none; padding: 0; backdrop-filter: none; font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.65); }
+        .header-clock {
+            background: none; border: none; padding: 0; backdrop-filter: none;
+            font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.65); margin-right: auto;
+        }
         .header-clock i { display: none; }
         .clock-date { display: none; }
-        .who { gap: 6px; }
-        .who .user-chip { display: none; }
-        .who button.logout {
-            color: #fca5b1; background: rgba(255,255,255,.06); border-color: rgba(255,143,163,.3);
-            width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
-        }
-        .who button.logout:hover { background: rgba(255,80,100,.18); }
-        .who button.logout span { display: none; }
         .theme-toggle {
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
             width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
         }
@@ -247,16 +287,6 @@ unset($_SESSION['reveal_secret']);
     }
 
     main { max-width: 1100px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
-
-    .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .admin-tab {
-        display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
-        background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-secondary);
-        text-decoration: none; font-size: .84rem; font-weight: 500; transition: background .2s, color .2s;
-        backdrop-filter: blur(14px);
-    }
-    .admin-tab:hover { background: rgba(79,110,247,.12); color: var(--text-primary); }
-    .admin-tab.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; border-color: transparent; }
 
     .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .page-head h1 { font-size: 1.15rem; color: var(--text-primary); margin: 0; }
@@ -304,6 +334,24 @@ unset($_SESSION['reveal_secret']);
     .badge.inactive { background: rgba(215,63,82,.18); color: #b3283f; border: 1px solid rgba(215,63,82,.4); }
     [data-theme="dark"] .badge.inactive { color: #ffd9de; }
 
+    /* ── Mobile card view — same dual-markup approach CIMM uses (render both
+       table and cards, media query swaps which is visible) rather than a
+       CSS-only table transform ── */
+    .systems-card-list { display: none; }
+    .sys-card {
+        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+        padding: 16px; margin-bottom: 12px; backdrop-filter: blur(14px);
+    }
+    .sys-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sys-card-header .sys-card-name { color: var(--text-primary); font-weight: 600; font-size: .9rem; }
+    .sys-card-header .sys-slug { display: block; }
+    .sys-card-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .8rem; padding: 6px 0; border-top: 1px solid var(--card-border); }
+    .sys-card-row strong { color: var(--text-secondary); font-weight: 500; }
+    .sys-card-row .sys-url { text-align: right; }
+    .sys-card-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border); }
+    .sys-card-actions .row-btn { flex: 1; width: auto; gap: 6px; padding: 0 10px; font-size: .78rem; font-weight: 600; }
+    .sys-card-actions .row-btn.rotate-btn, .sys-card-actions .row-btn.delete-btn { flex: 0 0 auto; padding: 0; width: 38px; }
+
     /* ── Modals ── */
     .modal-backdrop {
         position: fixed; inset: 0; background: rgba(3,6,16,.55); backdrop-filter: blur(6px);
@@ -315,8 +363,38 @@ unset($_SESSION['reveal_secret']);
         padding: 30px 26px 24px; max-width: 340px; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,.4);
         backdrop-filter: blur(22px); text-align: center; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);
     }
-    .modal-card.modal-card--form { max-width: 460px; text-align: left; margin: auto; }
     @keyframes modalPop { from { transform: translateY(20px) scale(.94); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+    /* Add/Edit system modal — header-bar form modal (CIMM-inspired) */
+    .sysform-card {
+        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+        max-width: 520px; width: 100%; max-height: 90vh; box-shadow: 0 25px 60px rgba(0,0,0,.4);
+        backdrop-filter: blur(22px); text-align: left; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);
+        overflow: hidden; display: flex; flex-direction: column; margin: auto;
+    }
+    .sysform-card form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    .sysform-head {
+        display: flex; align-items: center; gap: 13px; padding: 18px 22px; flex-shrink: 0;
+        background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
+    }
+    .sysform-head-icon {
+        width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,.18);
+        display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .sysform-head-text { flex: 1; min-width: 0; }
+    .sysform-head-text h2 { margin: 0; font-size: 1rem; color: #fff; }
+    .sysform-head-text span { font-size: .74rem; opacity: .85; display: block; margin-top: 2px; }
+    .sysform-close {
+        width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.15);
+        color: #fff; font-size: .8rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background .18s; flex-shrink: 0;
+    }
+    .sysform-close:hover { background: rgba(255,255,255,.3); }
+    .sysform-body { padding: 22px 22px 4px; overflow-y: auto; flex: 1; min-height: 0; }
+    .sysform-footer { flex-shrink: 0; padding: 16px 22px; border-top: 1px solid var(--card-border); }
+    @media (max-width: 520px) {
+        .sysform-card { max-width: 96vw; }
+    }
     .modal-icon-wrap {
         width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 16px;
         background: linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.08));
@@ -382,41 +460,52 @@ unset($_SESSION['reveal_secret']);
     @media (max-width: 768px) {
         main { padding: 18px 14px 40px; }
         .form-grid { grid-template-columns: 1fr; }
+        .systems-table-wrap { display: none; }
+        .systems-card-list { display: block; }
     }
 </style>
 </head>
 <body>
 <div id="loadingOverlay"></div>
 <?php renderNotification(); ?>
-<header>
-    <div class="brand">
+<button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <div class="sidebar-logo">
         <img src="../public/logocityhall.png" alt="InfraGovServices">
-        <div>
+        <div class="sidebar-logo-text">
             <strong>InfraGovServices</strong>
             <span>Super Admin · SSO Hub</span>
         </div>
     </div>
-    <div class="who">
-        <span class="header-clock"><i class="fas fa-clock"></i><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
-        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <span class="theme-track">
-                <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
-            </span>
-        </button>
-        <div class="user-chip">
+    <ul class="sidebar-nav-list">
+        <li><a href="dashboard.php" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
+        <li><a href="systems.php" class="sidebar-link active"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
+        <li><a href="launch_history.php" class="sidebar-link"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
+    </ul>
+    <div class="sidebar-bottom">
+        <div class="sidebar-user">
             <span class="user-avatar"><?= strtoupper(substr($_SESSION['super_admin_name'], 0, 1)) ?></span>
-            <span class="name">Signed in as <strong><?= htmlspecialchars($_SESSION['super_admin_name']) ?></strong></span>
+            <span class="uname"><?= htmlspecialchars($_SESSION['super_admin_name']) ?></span>
         </div>
-        <button type="button" class="logout" id="openLogoutModal"><i class="fas fa-arrow-right-from-bracket"></i> <span>Log out</span></button>
+        <button type="button" class="sidebar-logout" id="openLogoutModal"><i class="fas fa-arrow-right-from-bracket"></i> <span>Log out</span></button>
     </div>
-</header>
-<main>
-    <nav class="admin-tabs">
-        <a href="dashboard.php" class="admin-tab"><i class="fas fa-gauge"></i> Dashboard</a>
-        <a href="systems.php" class="admin-tab active"><i class="fas fa-server"></i> Connected Systems</a>
-        <a href="launch_history.php" class="admin-tab"><i class="fas fa-clock-rotate-left"></i> Launch History</a>
-    </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<div class="topbar">
+    <span class="header-clock"><i class="fas fa-clock"></i><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="theme-track">
+            <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
+        </span>
+    </button>
+</div>
+
+<main class="main-content">
     <div class="page-head">
         <h1>Connected systems</h1>
         <button type="button" class="btn-add" id="openAddModal"><i class="fas fa-plus"></i> Add system</button>
@@ -483,6 +572,56 @@ unset($_SESSION['reveal_secret']);
             </tbody>
         </table>
     </div>
+
+    <div class="systems-card-list">
+        <?php foreach ($systems as $system): ?>
+            <div class="sys-card">
+                <div class="sys-card-header">
+                    <div class="sys-icon-chip <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
+                    <div>
+                        <div class="sys-card-name"><?= htmlspecialchars($system['name']) ?></div>
+                        <div class="sys-slug"><?= htmlspecialchars($system['slug']) ?></div>
+                    </div>
+                </div>
+                <div class="sys-card-row">
+                    <span>Base URL</span>
+                    <span class="sys-url" style="text-align:right;"><?= htmlspecialchars($system['base_url']) ?></span>
+                </div>
+                <div class="sys-card-row">
+                    <span>Status</span>
+                    <form method="post" style="display:inline;">
+                        <input type="hidden" name="action" value="toggle_active">
+                        <input type="hidden" name="id" value="<?= (int) $system['id'] ?>">
+                        <button type="submit" class="badge status-toggle-btn <?= $system['is_active'] ? 'active' : 'inactive' ?>">
+                            <?= $system['is_active'] ? '● Active' : '● Inactive' ?>
+                        </button>
+                    </form>
+                </div>
+                <div class="sys-card-actions">
+                    <button type="button" class="row-btn edit-btn" title="Edit"
+                        data-id="<?= (int) $system['id'] ?>"
+                        data-slug="<?= htmlspecialchars($system['slug']) ?>"
+                        data-name="<?= htmlspecialchars($system['name']) ?>"
+                        data-base-url="<?= htmlspecialchars($system['base_url']) ?>"
+                        data-admin-entry-path="<?= htmlspecialchars($system['admin_entry_path']) ?>"
+                        data-sso-consume-path="<?= htmlspecialchars($system['sso_consume_path']) ?>"
+                        data-stats-path="<?= htmlspecialchars((string) $system['stats_path']) ?>"
+                        data-icon="<?= htmlspecialchars($system['icon']) ?>"
+                        data-theme-color="<?= htmlspecialchars($system['theme_color']) ?>"
+                        data-short-tag="<?= htmlspecialchars($system['short_tag']) ?>"
+                        data-is-active="<?= (int) $system['is_active'] ?>"
+                    ><i class="fas fa-pen"></i> Edit</button>
+
+                    <button type="button" class="row-btn rotate-btn" title="Rotate secret" data-id="<?= (int) $system['id'] ?>" data-name="<?= htmlspecialchars($system['name']) ?>"><i class="fas fa-key"></i></button>
+
+                    <button type="button" class="row-btn danger delete-btn" title="Delete" data-id="<?= (int) $system['id'] ?>" data-name="<?= htmlspecialchars($system['name']) ?>"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        <?php endforeach; ?>
+        <?php if ($systems === []): ?>
+            <div style="text-align:center; color:var(--text-secondary); padding:30px;">No connected systems yet.</div>
+        <?php endif; ?>
+    </div>
 </main>
 
 <!-- Reveal secret modal (shown once right after create/rotate) -->
@@ -501,63 +640,87 @@ unset($_SESSION['reveal_secret']);
 
 <!-- Add/Edit modal -->
 <div class="modal-backdrop" id="formModal">
-    <div class="modal-card modal-card--form">
-        <h2 id="formModalTitle">Add system</h2>
-        <form method="post" id="systemForm">
-            <input type="hidden" name="action" id="formAction" value="create">
-            <input type="hidden" name="id" id="formId" value="">
-            <div class="form-grid">
-                <div class="form-field" id="slugField">
-                    <label for="formSlug">Slug (fixed identifier)</label>
-                    <input type="text" name="slug" id="formSlug" placeholder="e.g. roadmon" pattern="[a-z0-9_-]+" required>
-                </div>
-                <div class="form-field">
-                    <label for="formName">Display name</label>
-                    <input type="text" name="name" id="formName" required>
-                </div>
-                <div class="form-field full">
-                    <label for="formBaseUrl">Base URL</label>
-                    <input type="text" name="base_url" id="formBaseUrl" placeholder="https://example.infragovservices.com" required>
-                </div>
-                <div class="form-field">
-                    <label for="formSsoPath">SSO consume path</label>
-                    <input type="text" name="sso_consume_path" id="formSsoPath" placeholder="/sso/consume" required>
-                </div>
-                <div class="form-field">
-                    <label for="formStatsPath">Stats path (optional)</label>
-                    <input type="text" name="stats_path" id="formStatsPath" placeholder="/api/stats">
-                </div>
-                <div class="form-field full">
-                    <label for="formAdminPath">Admin entry path (reference only)</label>
-                    <input type="text" name="admin_entry_path" id="formAdminPath" placeholder="/dashboard">
-                </div>
-                <div class="form-field">
-                    <label for="formIcon">Icon</label>
-                    <select name="icon" id="formIcon">
-                        <?php foreach (SYSTEM_ICON_CHOICES as $val => $label): ?>
-                            <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($label) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label for="formThemeColor">Card color</label>
-                    <select name="theme_color" id="formThemeColor">
-                        <?php foreach (SYSTEM_THEME_COLORS as $color): ?>
-                            <option value="<?= $color ?>"><?= ucfirst($color) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-field full">
-                    <label for="formShortTag">Badge text</label>
-                    <input type="text" name="short_tag" id="formShortTag" placeholder="e.g. RGMAP" maxlength="20">
-                </div>
+    <div class="sysform-card">
+        <div class="sysform-head">
+            <div class="sysform-head-icon"><i class="fas fa-server" id="formModalIcon"></i></div>
+            <div class="sysform-head-text">
+                <h2 id="formModalTitle">Add system</h2>
+                <span id="formModalSub">Register a new connected system</span>
             </div>
-            <label class="form-checkbox"><input type="checkbox" name="is_active" id="formIsActive" checked> Active (visible on the dashboard)</label>
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel" id="cancelForm">Cancel</button>
-                <button type="submit" class="btn-confirm btn-confirm--info" id="submitFormBtn">Save</button>
+            <button type="button" class="sysform-close" id="closeFormModalX" aria-label="Close"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form method="post" id="systemForm">
+            <div class="sysform-body">
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="id" id="formId" value="">
+                <div class="form-grid">
+                    <div class="form-field" id="slugField">
+                        <label for="formSlug">Slug (fixed identifier)</label>
+                        <input type="text" name="slug" id="formSlug" placeholder="e.g. roadmon" pattern="[a-z0-9_-]+" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="formName">Display name</label>
+                        <input type="text" name="name" id="formName" required>
+                    </div>
+                    <div class="form-field full">
+                        <label for="formBaseUrl">Base URL</label>
+                        <input type="text" name="base_url" id="formBaseUrl" placeholder="https://example.infragovservices.com" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="formSsoPath">SSO consume path</label>
+                        <input type="text" name="sso_consume_path" id="formSsoPath" placeholder="/sso/consume" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="formStatsPath">Stats path (optional)</label>
+                        <input type="text" name="stats_path" id="formStatsPath" placeholder="/api/stats">
+                    </div>
+                    <div class="form-field full">
+                        <label for="formAdminPath">Admin entry path (reference only)</label>
+                        <input type="text" name="admin_entry_path" id="formAdminPath" placeholder="/dashboard">
+                    </div>
+                    <div class="form-field">
+                        <label for="formIcon">Icon</label>
+                        <select name="icon" id="formIcon">
+                            <?php foreach (SYSTEM_ICON_CHOICES as $val => $label): ?>
+                                <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="formThemeColor">Card color</label>
+                        <select name="theme_color" id="formThemeColor">
+                            <?php foreach (SYSTEM_THEME_COLORS as $color): ?>
+                                <option value="<?= $color ?>"><?= ucfirst($color) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-field full">
+                        <label for="formShortTag">Badge text</label>
+                        <input type="text" name="short_tag" id="formShortTag" placeholder="e.g. RGMAP" maxlength="20">
+                    </div>
+                </div>
+                <label class="form-checkbox"><input type="checkbox" name="is_active" id="formIsActive" checked> Active (visible on the dashboard)</label>
+            </div>
+            <div class="sysform-footer">
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="cancelForm">Cancel</button>
+                    <button type="submit" class="btn-confirm btn-confirm--info" id="submitFormBtn">Save</button>
+                </div>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Save changes confirmation (edit only) -->
+<div class="modal-backdrop" id="saveConfirmModal">
+    <div class="modal-card">
+        <div class="modal-icon-wrap modal-icon-wrap--info"><i class="fas fa-floppy-disk"></i></div>
+        <h2>Save changes to <span id="saveConfirmName"></span>?</h2>
+        <p class="modal-sub">This updates the system's connection settings immediately.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelSaveConfirm">Cancel</button>
+            <button type="button" class="btn-confirm btn-confirm--info" id="confirmSaveBtn">Save changes</button>
+        </div>
     </div>
 </div>
 
@@ -615,6 +778,31 @@ function closeNotif() {
 }
 setTimeout(closeNotif, 4500);
 
+// Sidebar: desktop collapse (persisted) + mobile slide-in drawer
+(function () {
+    var sidebar = document.getElementById('sidebar');
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    var mobileToggle = document.getElementById('mobileToggle');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    try {
+        if (localStorage.getItem('sidebarCollapsed') === 'true') sidebar.classList.add('collapsed');
+    } catch (e) {}
+
+    sidebarToggle.addEventListener('click', function () {
+        var isCollapsed = sidebar.classList.toggle('collapsed');
+        try { localStorage.setItem('sidebarCollapsed', isCollapsed); } catch (e) {}
+    });
+
+    function openMobile() { sidebar.classList.add('mobile-active'); overlay.classList.add('show'); }
+    function closeMobile() { sidebar.classList.remove('mobile-active'); overlay.classList.remove('show'); }
+
+    mobileToggle.addEventListener('click', function () {
+        sidebar.classList.contains('mobile-active') ? closeMobile() : openMobile();
+    });
+    overlay.addEventListener('click', closeMobile);
+})();
+
 // Theme toggle
 (function () {
     var html = document.documentElement;
@@ -657,11 +845,17 @@ setTimeout(closeNotif, 4500);
 (function () {
     var modal = document.getElementById('formModal');
     var title = document.getElementById('formModalTitle');
+    var sub = document.getElementById('formModalSub');
+    var icon = document.getElementById('formModalIcon');
     var slugField = document.getElementById('slugField');
     var slugInput = document.getElementById('formSlug');
 
+    function closeModal() { modal.classList.remove('show'); }
+
     function openForCreate() {
         title.textContent = 'Add system';
+        sub.textContent = 'Register a new connected system';
+        icon.className = 'fas fa-plus';
         document.getElementById('formAction').value = 'create';
         document.getElementById('formId').value = '';
         document.getElementById('systemForm').reset();
@@ -673,6 +867,8 @@ setTimeout(closeNotif, 4500);
     function openForEdit(btn) {
         var d = btn.dataset;
         title.textContent = 'Edit ' + d.name;
+        sub.textContent = 'Update this system’s connection settings';
+        icon.className = 'fas fa-pen';
         document.getElementById('formAction').value = 'update';
         document.getElementById('formId').value = d.id;
         document.getElementById('formSlug').value = d.slug;
@@ -693,7 +889,30 @@ setTimeout(closeNotif, 4500);
     document.querySelectorAll('.edit-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { openForEdit(btn); });
     });
-    document.getElementById('cancelForm').addEventListener('click', function () { modal.classList.remove('show'); });
+    document.getElementById('cancelForm').addEventListener('click', closeModal);
+    document.getElementById('closeFormModalX').addEventListener('click', closeModal);
+})();
+
+// Confirm before saving edits (create is submitted directly)
+(function () {
+    var form = document.getElementById('systemForm');
+    var confirmModal = document.getElementById('saveConfirmModal');
+    var confirmName = document.getElementById('saveConfirmName');
+    var confirmYes = document.getElementById('confirmSaveBtn');
+    var confirmNo = document.getElementById('cancelSaveConfirm');
+
+    form.addEventListener('submit', function (e) {
+        if (document.getElementById('formAction').value === 'update') {
+            e.preventDefault();
+            confirmName.textContent = document.getElementById('formName').value || 'this system';
+            confirmModal.classList.add('show');
+        }
+    });
+    confirmYes.addEventListener('click', function () {
+        confirmModal.classList.remove('show');
+        form.submit();
+    });
+    confirmNo.addEventListener('click', function () { confirmModal.classList.remove('show'); });
 })();
 
 // Rotate secret modal

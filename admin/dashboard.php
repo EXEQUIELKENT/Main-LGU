@@ -62,19 +62,75 @@ $systemStats = fetchAllSystemStats($systems);
         background-position: center, center;
         background-attachment: fixed, fixed;
     }
-    /* ── Desktop header ── */
-    header {
-        position: sticky; top: 0; z-index: 200;
+    /* ── Sidebar (desktop: fixed left column, collapsible; mobile: slide-in drawer) ── */
+    :root { --sidebar-w: 240px; --sidebar-w-collapsed: 72px; }
+    .sidebar {
+        position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; z-index: 500;
+        background: var(--card-bg); border-right: 1px solid var(--card-border);
+        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        display: flex; flex-direction: column; transition: width .3s ease, left .3s ease, background .3s;
+    }
+    .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+    .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
+    .sidebar-toggle {
+        width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+        background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-size: .78rem;
+        box-shadow: 0 3px 10px rgba(63,90,223,.35); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 18px 18px; }
+    .sidebar-logo img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
+    .sidebar-logo strong { display: block; color: var(--text-primary); font-size: .9rem; white-space: nowrap; }
+    .sidebar-logo span { display: block; color: var(--text-secondary); font-size: .68rem; white-space: nowrap; }
+    .sidebar.collapsed .sidebar-logo-text { display: none; }
+    .sidebar-nav-list { list-style: none; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .sidebar-link {
+        display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+        color: var(--text-secondary); text-decoration: none; font-size: .85rem; font-weight: 500;
+        white-space: nowrap; transition: background .2s, color .2s, transform .2s;
+    }
+    .sidebar-link i { width: 18px; text-align: center; flex-shrink: 0; }
+    .sidebar-link:hover { background: rgba(79,110,247,.1); color: var(--text-primary); }
+    .sidebar-link.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; box-shadow: 0 3px 10px rgba(63,90,223,.3); }
+    .sidebar.collapsed .sidebar-link { justify-content: center; padding: 11px; }
+    .sidebar.collapsed .sidebar-link span { display: none; }
+    .sidebar-bottom { border-top: 1px solid var(--card-border); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .sidebar-user .user-avatar {
+        width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
+        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0;
+    }
+    .sidebar-user span.uname { color: var(--text-primary); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar.collapsed .sidebar-user span.uname { display: none; }
+    .sidebar-logout {
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px;
+        border: 1px solid rgba(255,143,163,.3); background: none; color: #ff8fa3; cursor: pointer;
+        font-family: inherit; font-size: .82rem; font-weight: 500; transition: background .15s;
+    }
+    .sidebar-logout:hover { background: rgba(255,143,163,.1); }
+    .sidebar.collapsed .sidebar-logout { justify-content: center; padding: 10px; }
+    .sidebar.collapsed .sidebar-logout span { display: none; }
+    .sidebar-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(3,6,16,.5); z-index: 490;
+        opacity: 0; transition: opacity .3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+    .mobile-toggle {
+        display: none; position: fixed; top: 11px; left: 12px; z-index: 600;
+        width: 36px; height: 36px; border-radius: 9px; background: rgba(5,10,25,.9); color: #fff;
+        border: 1px solid rgba(255,255,255,.14); align-items: center; justify-content: center; cursor: pointer; font-size: .95rem;
+    }
+
+    /* ── Top utility bar (clock + theme toggle), sits beside the sidebar ── */
+    .topbar {
+        position: sticky; top: 0; z-index: 200; margin-left: var(--sidebar-w);
         background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
         border-bottom: 1px solid var(--card-border);
-        padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
-        transition: background .3s, border-color .3s;
-        flex-wrap: wrap; gap: 12px;
+        padding: 12px 32px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+        transition: margin-left .3s ease, background .3s;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 36px; height: 36px; border-radius: 9px; }
-    .brand strong { color: var(--text-primary); font-size: 1rem; display: block; }
-    .brand span { color: var(--text-secondary); font-size: .74rem; }
+    .sidebar.collapsed ~ .topbar { margin-left: var(--sidebar-w-collapsed); }
 
     .header-clock {
         font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary);
@@ -83,25 +139,6 @@ $systemStats = fetchAllSystemStats($systems);
     }
     .header-clock i { font-size: .72rem; opacity: .8; }
     .clock-date::after { content: ' · '; }
-
-    .who { display: flex; align-items: center; gap: 14px; }
-    .who .user-chip {
-        display: flex; align-items: center; gap: 9px;
-        background: rgba(120,140,220,.1); border: 1px solid var(--card-border); padding: 5px 14px 5px 6px; border-radius: 50px;
-    }
-    .who .user-avatar {
-        width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#4f6ef7,#3f5adf);
-        color: #fff; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700;
-        flex-shrink: 0;
-    }
-    .who .name { color: var(--text-secondary); font-size: .8rem; }
-    .who .name strong { color: var(--text-primary); }
-    .who button.logout {
-        color: #ff8fa3; background: none; font-size: .82rem; font-weight: 500; font-family: inherit;
-        border: 1px solid rgba(255,143,163,.35); padding: 8px 16px; border-radius: 50px; transition: background .15s;
-        cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
-    }
-    .who button.logout:hover { background: rgba(255,143,163,.1); }
 
     /* Theme toggle switch — same visual language as the public site */
     .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
@@ -121,41 +158,33 @@ $systemStats = fetchAllSystemStats($systems);
     [data-theme="dark"] .theme-thumb .fa-sun { display: none; }
     [data-theme="dark"] .theme-thumb .fa-moon { display: inline; }
 
-    /* ── Mobile: compact always-dark bar (same pattern as public site's mobile nav) ── */
-    @media (max-width: 768px) {
-        header {
-            position: sticky; top: 0; height: 54px; padding: 0 14px; gap: 8px;
-            background: rgba(5,10,25,.94); border-bottom: 1px solid rgba(59,130,246,.2);
-            box-shadow: 0 2px 16px rgba(0,0,0,.5); justify-content: flex-end;
-        }
-        .brand {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            gap: 0;
-        }
-        .brand img { width: 26px; height: 26px; }
-        .brand strong, .brand span { display: none; }
+    .main-content { margin-left: var(--sidebar-w); transition: margin-left .3s ease; }
+    .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-w-collapsed); }
 
+    /* ── Mobile: sidebar becomes an off-canvas drawer, topbar/content full-width ── */
+    @media (max-width: 900px) {
+        .sidebar { left: -100%; width: 260px; box-shadow: none; }
+        .sidebar.mobile-active { left: 0; box-shadow: 0 0 50px rgba(0,0,0,.45); }
+        .sidebar.collapsed { width: 260px; }
+        .sidebar.collapsed .sidebar-logo-text,
+        .sidebar.collapsed .sidebar-link span,
+        .sidebar.collapsed .sidebar-user span.uname,
+        .sidebar.collapsed .sidebar-logout span { display: block; }
+        .sidebar-header { display: none; }
+        .mobile-toggle { display: flex; }
+        .topbar, .main-content, .sidebar.collapsed ~ .topbar, .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+        .topbar {
+            height: 54px; padding: 0 14px 0 58px; gap: 8px;
+            background: rgba(5,10,25,.94); border-bottom: 1px solid rgba(59,130,246,.2);
+            box-shadow: 0 2px 16px rgba(0,0,0,.5);
+        }
         .header-clock {
             background: none; border: none; padding: 0; backdrop-filter: none;
-            font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.65);
+            font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.65); margin-right: auto;
         }
         .header-clock i { display: none; }
         .clock-date { display: none; }
-
-        .who { gap: 6px; }
-        .who .user-chip { display: none; }
-        .who button.logout {
-            color: #fca5b1; background: rgba(255,255,255,.06); border-color: rgba(255,143,163,.3);
-            width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
-        }
-        .who button.logout:hover { background: rgba(255,80,100,.18); }
-        .who button.logout span { display: none; }
-
-        /* Theme toggle pinned to the far left, separate from the logout
-           cluster on the right — header is position:sticky, which (like
-           position:relative/fixed) is a valid containing block for this. */
         .theme-toggle {
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
             width: 32px; height: 32px; border-radius: 8px; padding: 0; justify-content: center;
         }
@@ -168,16 +197,6 @@ $systemStats = fetchAllSystemStats($systems);
     }
 
     main { max-width: 1300px; margin: 0 auto; padding: 34px 32px 60px; position: relative; z-index: 1; }
-
-    .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .admin-tab {
-        display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
-        background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-secondary);
-        text-decoration: none; font-size: .84rem; font-weight: 500; transition: background .2s, color .2s;
-        backdrop-filter: blur(14px);
-    }
-    .admin-tab:hover { background: rgba(79,110,247,.12); color: var(--text-primary); }
-    .admin-tab.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; border-color: transparent; }
 
     @keyframes dashCardIn {
         from { opacity: 0; transform: translateY(18px) scale(.97); }
@@ -333,35 +352,44 @@ $systemStats = fetchAllSystemStats($systems);
 </style>
 </head>
 <body>
-<header>
-    <div class="brand">
+<button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <div class="sidebar-logo">
         <img src="../public/logocityhall.png" alt="InfraGovServices">
-        <div>
+        <div class="sidebar-logo-text">
             <strong>InfraGovServices</strong>
             <span>Super Admin · SSO Hub</span>
         </div>
     </div>
-    <div class="who">
-        <span class="header-clock"><i class="fas fa-clock"></i><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
-        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <span class="theme-track">
-                <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
-            </span>
-        </button>
-        <div class="user-chip">
+    <ul class="sidebar-nav-list">
+        <li><a href="dashboard.php" class="sidebar-link active"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
+        <li><a href="systems.php" class="sidebar-link"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
+        <li><a href="launch_history.php" class="sidebar-link"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
+    </ul>
+    <div class="sidebar-bottom">
+        <div class="sidebar-user">
             <span class="user-avatar"><?= strtoupper(substr($_SESSION['super_admin_name'], 0, 1)) ?></span>
-            <span class="name">Signed in as <strong><?= htmlspecialchars($_SESSION['super_admin_name']) ?></strong></span>
+            <span class="uname"><?= htmlspecialchars($_SESSION['super_admin_name']) ?></span>
         </div>
-        <button type="button" class="logout" id="openLogoutModal"><i class="fas fa-arrow-right-from-bracket"></i> <span>Log out</span></button>
+        <button type="button" class="sidebar-logout" id="openLogoutModal"><i class="fas fa-arrow-right-from-bracket"></i> <span>Log out</span></button>
     </div>
-</header>
-<main>
-    <nav class="admin-tabs">
-        <a href="dashboard.php" class="admin-tab active"><i class="fas fa-gauge"></i> Dashboard</a>
-        <a href="systems.php" class="admin-tab"><i class="fas fa-server"></i> Connected Systems</a>
-        <a href="launch_history.php" class="admin-tab"><i class="fas fa-clock-rotate-left"></i> Launch History</a>
-    </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<div class="topbar">
+    <span class="header-clock"><i class="fas fa-clock"></i><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="theme-track">
+            <span class="theme-thumb"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></span>
+        </span>
+    </button>
+</div>
+
+<main class="main-content">
     <div class="stats-row">
     <?php foreach ($systems as $system):
         $stat = $systemStats[$system['slug']] ?? null;
@@ -432,6 +460,31 @@ $systemStats = fetchAllSystemStats($systems);
 </div>
 
 <script>
+// Sidebar: desktop collapse (persisted) + mobile slide-in drawer
+(function () {
+    var sidebar = document.getElementById('sidebar');
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    var mobileToggle = document.getElementById('mobileToggle');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    try {
+        if (localStorage.getItem('sidebarCollapsed') === 'true') sidebar.classList.add('collapsed');
+    } catch (e) {}
+
+    sidebarToggle.addEventListener('click', function () {
+        var isCollapsed = sidebar.classList.toggle('collapsed');
+        try { localStorage.setItem('sidebarCollapsed', isCollapsed); } catch (e) {}
+    });
+
+    function openMobile() { sidebar.classList.add('mobile-active'); overlay.classList.add('show'); }
+    function closeMobile() { sidebar.classList.remove('mobile-active'); overlay.classList.remove('show'); }
+
+    mobileToggle.addEventListener('click', function () {
+        sidebar.classList.contains('mobile-active') ? closeMobile() : openMobile();
+    });
+    overlay.addEventListener('click', closeMobile);
+})();
+
 // Theme toggle — shares the same localStorage keys as the public site
 // (public/citizendash.php) so a preference set on either side carries over.
 (function () {
