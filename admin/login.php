@@ -32,8 +32,13 @@ function renderNotification(): void
     unset($_SESSION['notification']);
 }
 
-if (isset($_GET['timeout'])) {
+// Only on a plain GET landing — the login form has no action attribute, so
+// submitting it from login.php?timeout=1 would otherwise resubmit that same
+// query string, re-arming this notification for the OTP screen that follows.
+if (isset($_GET['timeout']) && $_SERVER['REQUEST_METHOD'] === 'GET') {
     setNotification('info', 'You were signed out after 2 minutes of inactivity.');
+    header('Location: login.php');
+    exit;
 }
 
 // ── Consume a password-reset link ───────────────────────────────────────
