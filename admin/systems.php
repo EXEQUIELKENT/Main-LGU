@@ -112,6 +112,11 @@ unset($_SESSION['reveal_secret']);
         var t = localStorage.getItem('theme') || localStorage.getItem('theme_backup') || 'light';
         if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     } catch (e) {}
+    try {
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
+        }
+    } catch (e) {}
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,21 +168,21 @@ unset($_SESSION['reveal_secret']);
         backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
         display: flex; flex-direction: column; transition: width .3s ease, left .3s ease, background .3s;
     }
-    .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+    .sidebar.collapsed, html[data-sidebar-collapsed="true"] .sidebar { width: var(--sidebar-w-collapsed); }
     .sidebar-header { display: flex; align-items: center; justify-content: flex-end; padding: 14px; }
-    .sidebar.collapsed .sidebar-header { justify-content: center; }
+    .sidebar.collapsed .sidebar-header, html[data-sidebar-collapsed="true"] .sidebar-header { justify-content: center; }
     .sidebar-toggle {
         width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
         background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff;
         display: flex; align-items: center; justify-content: center; font-size: .78rem;
         box-shadow: 0 3px 10px rgba(63,90,223,.35); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
     }
-    .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+    .sidebar.collapsed .sidebar-toggle, html[data-sidebar-collapsed="true"] .sidebar-toggle { transform: rotate(180deg); }
     .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 18px 18px; }
     .sidebar-logo img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
     .sidebar-logo strong { display: block; color: var(--text-primary); font-size: .9rem; white-space: nowrap; }
     .sidebar-logo span { display: block; color: var(--text-secondary); font-size: .68rem; white-space: nowrap; }
-    .sidebar.collapsed .sidebar-logo-text { display: none; }
+    .sidebar.collapsed .sidebar-logo-text, html[data-sidebar-collapsed="true"] .sidebar-logo-text { display: none; }
     .sidebar-nav-list { list-style: none; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
     .sidebar-link {
         display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
@@ -187,8 +192,8 @@ unset($_SESSION['reveal_secret']);
     .sidebar-link i { width: 18px; text-align: center; flex-shrink: 0; }
     .sidebar-link:hover { background: rgba(79,110,247,.1); color: var(--text-primary); }
     .sidebar-link.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; box-shadow: 0 3px 10px rgba(63,90,223,.3); }
-    .sidebar.collapsed .sidebar-link { justify-content: center; padding: 11px; }
-    .sidebar.collapsed .sidebar-link span { display: none; }
+    .sidebar.collapsed .sidebar-link, html[data-sidebar-collapsed="true"] .sidebar-link { justify-content: center; padding: 11px; }
+    .sidebar.collapsed .sidebar-link span, html[data-sidebar-collapsed="true"] .sidebar-link span { display: none; }
     .sidebar-bottom { border-top: 1px solid var(--card-border); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
     .sidebar-user { display: flex; align-items: center; gap: 10px; overflow: hidden; }
     .sidebar-user .user-avatar {
@@ -196,15 +201,15 @@ unset($_SESSION['reveal_secret']);
         color: #fff; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0;
     }
     .sidebar-user span.uname { color: var(--text-primary); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar.collapsed .sidebar-user span.uname { display: none; }
+    .sidebar.collapsed .sidebar-user span.uname, html[data-sidebar-collapsed="true"] .sidebar-user span.uname { display: none; }
     .sidebar-logout {
         display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px;
         border: 1px solid rgba(255,143,163,.3); background: none; color: #ff8fa3; cursor: pointer;
         font-family: inherit; font-size: .82rem; font-weight: 500; transition: background .15s;
     }
     .sidebar-logout:hover { background: rgba(255,143,163,.1); }
-    .sidebar.collapsed .sidebar-logout { justify-content: center; padding: 10px; }
-    .sidebar.collapsed .sidebar-logout span { display: none; }
+    .sidebar.collapsed .sidebar-logout, html[data-sidebar-collapsed="true"] .sidebar-logout { justify-content: center; padding: 10px; }
+    .sidebar.collapsed .sidebar-logout span, html[data-sidebar-collapsed="true"] .sidebar-logout span { display: none; }
     .sidebar-overlay {
         display: none; position: fixed; inset: 0; background: rgba(3,6,16,.5); z-index: 490;
         opacity: 0; transition: opacity .3s;
@@ -223,7 +228,7 @@ unset($_SESSION['reveal_secret']);
         padding: 12px 32px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;
         transition: margin-left .3s ease, background .3s;
     }
-    .sidebar.collapsed ~ .topbar { margin-left: var(--sidebar-w-collapsed); }
+    .sidebar.collapsed ~ .topbar, html[data-sidebar-collapsed="true"] .topbar { margin-left: var(--sidebar-w-collapsed); }
 
     .header-clock {
         font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary);
@@ -251,7 +256,7 @@ unset($_SESSION['reveal_secret']);
     [data-theme="dark"] .theme-thumb .fa-moon { display: inline; }
 
     .main-content { margin-left: var(--sidebar-w); transition: margin-left .3s ease; }
-    .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-w-collapsed); }
+    .sidebar.collapsed ~ .main-content, html[data-sidebar-collapsed="true"] .main-content { margin-left: var(--sidebar-w-collapsed); }
 
     @media (max-width: 900px) {
         .sidebar { left: -100%; width: 260px; box-shadow: none; }
@@ -794,6 +799,11 @@ setTimeout(closeNotif, 4500);
     sidebarToggle.addEventListener('click', function () {
         var isCollapsed = sidebar.classList.toggle('collapsed');
         try { localStorage.setItem('sidebarCollapsed', isCollapsed); } catch (e) {}
+        if (isCollapsed) {
+            document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
+        } else {
+            document.documentElement.removeAttribute('data-sidebar-collapsed');
+        }
     });
 
     function openMobile() { sidebar.classList.add('mobile-active'); overlay.classList.add('show'); }
