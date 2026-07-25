@@ -111,10 +111,12 @@ $systemStats = fetchAllSystemStats($systems);
     .sidebar.collapsed .sidebar-user span.uname, html[data-sidebar-collapsed="true"] .sidebar-user span.uname { display: none; }
     .sidebar-logout {
         display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px;
-        border: 1px solid rgba(255,143,163,.3); background: none; color: #ff8fa3; cursor: pointer;
+        border: 1px solid rgba(200,24,90,.35); background: none; color: #c8185a; cursor: pointer;
         font-family: inherit; font-size: .82rem; font-weight: 500; transition: background .15s;
     }
-    .sidebar-logout:hover { background: rgba(255,143,163,.1); }
+    .sidebar-logout:hover { background: rgba(200,24,90,.08); }
+    [data-theme="dark"] .sidebar-logout { border-color: rgba(255,143,163,.3); color: #ff8fa3; }
+    [data-theme="dark"] .sidebar-logout:hover { background: rgba(255,143,163,.1); }
     .sidebar.collapsed .sidebar-logout, html[data-sidebar-collapsed="true"] .sidebar-logout { justify-content: center; padding: 10px; }
     .sidebar.collapsed .sidebar-logout span, html[data-sidebar-collapsed="true"] .sidebar-logout span { display: none; }
     .sidebar-overlay {
