@@ -324,6 +324,7 @@ unset($_SESSION['reveal_secret']);
     .sys-icon-chip.purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
     .sys-icon-chip.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .sys-icon-chip.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
+    .sys-icon-chip.indigo { background: linear-gradient(135deg,#6366f1,#4338ca); }
     .sys-slug { color: var(--text-secondary); font-size: .74rem; font-family: 'DM Mono', monospace; }
     .sys-url { color: var(--text-secondary); font-size: .78rem; word-break: break-all; }
     .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
