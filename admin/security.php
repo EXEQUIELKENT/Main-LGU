@@ -334,7 +334,7 @@ if ($admin['totp_enabled']) {
 
     .sec-card {
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
-        backdrop-filter: blur(14px); padding: 24px; margin-bottom: 20px; max-width: 720px;
+        backdrop-filter: blur(14px); padding: 24px; margin-bottom: 20px;
     }
     .sec-card-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
     .sec-icon-wrap {
