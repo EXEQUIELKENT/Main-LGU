@@ -8,8 +8,17 @@ $perPage = 25;
 $offset = ($page - 1) * $perPage;
 
 $filterSystem = trim($_GET['system'] ?? '');
+$filterAction = trim($_GET['action'] ?? '');
 $filterFrom = trim($_GET['from'] ?? '');
 $filterTo = trim($_GET['to'] ?? '');
+
+$actionMeta = [
+    'create' => ['label' => 'Created', 'icon' => 'fa-plus', 'color' => 'success'],
+    'update' => ['label' => 'Updated', 'icon' => 'fa-pen', 'color' => 'info'],
+    'toggle_active' => ['label' => 'Status changed', 'icon' => 'fa-toggle-on', 'color' => 'info'],
+    'rotate_secret' => ['label' => 'Rotated secret', 'icon' => 'fa-key', 'color' => 'warning'],
+    'delete' => ['label' => 'Deleted', 'icon' => 'fa-trash', 'color' => 'danger'],
+];
 
 $where = [];
 $params = [];
@@ -17,48 +26,21 @@ if ($filterSystem !== '') {
     $where[] = 'l.system_slug = ?';
     $params[] = $filterSystem;
 }
+if ($filterAction !== '' && array_key_exists($filterAction, $actionMeta)) {
+    $where[] = 'l.action = ?';
+    $params[] = $filterAction;
+}
 if ($filterFrom !== '') {
-    $where[] = 'l.launched_at >= ?';
+    $where[] = 'l.created_at >= ?';
     $params[] = $filterFrom . ' 00:00:00';
 }
 if ($filterTo !== '') {
-    $where[] = 'l.launched_at <= ?';
+    $where[] = 'l.created_at <= ?';
     $params[] = $filterTo . ' 23:59:59';
 }
 $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
 
-if (($_GET['export'] ?? '') === 'csv') {
-    $exportStmt = mainLguDb()->prepare("
-        SELECT l.launched_at, l.ip_address, l.system_slug, s.name AS system_name, a.full_name AS admin_name, a.email AS admin_email
-        FROM sso_launch_log l
-        LEFT JOIN super_admins a ON a.id = l.super_admin_id
-        LEFT JOIN connected_systems s ON s.slug = l.system_slug
-        {$whereSql}
-        ORDER BY l.launched_at DESC
-    ");
-    $exportStmt->execute($params);
-
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="launch_history_' . date('Y-m-d_His') . '.csv"');
-    header('Pragma: no-cache');
-
-    $out = fopen('php://output', 'w');
-    fputcsv($out, ['Launched at', 'System', 'System slug', 'Super admin', 'Admin email', 'IP address']);
-    while ($row = $exportStmt->fetch()) {
-        fputcsv($out, [
-            date('Y-m-d H:i:s', strtotime($row['launched_at'])),
-            $row['system_name'] ?? $row['system_slug'],
-            $row['system_slug'],
-            $row['admin_name'] ?? 'Unknown',
-            $row['admin_email'] ?? '',
-            $row['ip_address'] ?? '',
-        ]);
-    }
-    fclose($out);
-    exit;
-}
-
-$totalStmt = mainLguDb()->prepare("SELECT COUNT(*) FROM sso_launch_log l {$whereSql}");
+$totalStmt = mainLguDb()->prepare("SELECT COUNT(*) FROM system_audit_log l {$whereSql}");
 $totalStmt->execute($params);
 $total = (int) $totalStmt->fetchColumn();
 $totalPages = max(1, (int) ceil($total / $perPage));
@@ -66,17 +48,17 @@ $page = min($page, $totalPages);
 $offset = ($page - 1) * $perPage;
 
 $stmt = mainLguDb()->prepare("
-    SELECT l.*, a.full_name AS admin_name, a.email AS admin_email,
-           s.name AS system_name, s.icon AS system_icon, s.theme_color AS system_theme
-    FROM sso_launch_log l
+    SELECT l.*, a.full_name AS admin_name,
+           s.icon AS system_icon, s.theme_color AS system_theme
+    FROM system_audit_log l
     LEFT JOIN super_admins a ON a.id = l.super_admin_id
     LEFT JOIN connected_systems s ON s.slug = l.system_slug
     {$whereSql}
-    ORDER BY l.launched_at DESC
+    ORDER BY l.created_at DESC
     LIMIT {$perPage} OFFSET {$offset}
 ");
 $stmt->execute($params);
-$launches = $stmt->fetchAll();
+$entries = $stmt->fetchAll();
 
 $allSystems = mainLguDb()->query('SELECT slug, name FROM connected_systems ORDER BY name')->fetchAll();
 
@@ -92,7 +74,7 @@ function buildQuery(array $overrides): string
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Launch History — InfraGovServices</title>
+<title>Audit Log — InfraGovServices</title>
 <link rel="icon" href="../public/logocityhall.png" type="image/png">
 <script>
 (function () {
@@ -392,7 +374,7 @@ function buildQuery(array $overrides): string
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
         backdrop-filter: blur(14px); overflow: hidden; overflow-x: auto;
     }
-    table.history-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    table.history-table { width: 100%; border-collapse: collapse; min-width: 720px; }
     table.history-table th {
         text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
         color: var(--text-secondary); padding: 14px 16px; border-bottom: 1px solid var(--card-border);
@@ -412,6 +394,20 @@ function buildQuery(array $overrides): string
     .sys-icon-chip.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
     .ip-cell { font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary); }
     .time-cell { font-family: 'DM Mono', monospace; font-size: .78rem; white-space: nowrap; }
+    .details-cell { color: var(--text-secondary); font-size: .8rem; }
+
+    .action-badge {
+        display: inline-flex; align-items: center; gap: 6px; font-size: .68rem; padding: 4px 10px;
+        border-radius: 999px; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
+    }
+    .action-badge.success { background: rgba(79,201,122,.18); color: #1b8a4c; border: 1px solid rgba(79,201,122,.4); }
+    [data-theme="dark"] .action-badge.success { color: #d1fae0; }
+    .action-badge.danger { background: rgba(215,63,82,.18); color: #b3283f; border: 1px solid rgba(215,63,82,.4); }
+    [data-theme="dark"] .action-badge.danger { color: #ffd9de; }
+    .action-badge.info { background: rgba(79,110,247,.16); color: #3f5adf; border: 1px solid rgba(79,110,247,.35); }
+    [data-theme="dark"] .action-badge.info { color: #c7d3ff; }
+    .action-badge.warning { background: rgba(217,119,6,.16); color: #a05a00; border: 1px solid rgba(217,119,6,.35); }
+    [data-theme="dark"] .action-badge.warning { color: #ffd9a0; }
 
     .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
     .pagination .info { color: var(--text-secondary); font-size: .8rem; }
@@ -430,7 +426,7 @@ function buildQuery(array $overrides): string
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
         padding: 16px; margin-bottom: 12px; backdrop-filter: blur(14px);
     }
-    .hist-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .hist-card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
     .hist-card-header .sys-cell { font-weight: 600; color: var(--text-primary); font-size: .9rem; }
     .hist-card-row {
         display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -463,9 +459,9 @@ function buildQuery(array $overrides): string
     <ul class="sidebar-nav-list">
         <li><a href="dashboard.php" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
         <li><a href="systems.php" class="sidebar-link"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
-        <li><a href="launch_history.php" class="sidebar-link active"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
+        <li><a href="launch_history.php" class="sidebar-link"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
         <li><a href="analytics.php" class="sidebar-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-        <li><a href="audit_log.php" class="sidebar-link"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
+        <li><a href="audit_log.php" class="sidebar-link active"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
         <li><a href="team.php" class="sidebar-link"><i class="fas fa-users"></i><span>Team</span></a></li>
         <li><a href="security.php" class="sidebar-link"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
     </ul>
@@ -489,7 +485,7 @@ function buildQuery(array $overrides): string
 </div>
 
 <main class="main-content">
-    <h1>SSO launch history</h1>
+    <h1>Connected systems audit log</h1>
 
     <?php
     $currentSystemName = 'All systems';
@@ -521,6 +517,15 @@ function buildQuery(array $overrides): string
             </div>
         </div>
         <div class="field">
+            <label for="filterActionSelect">Action</label>
+            <select name="action" id="filterActionSelect">
+                <option value="">All actions</option>
+                <?php foreach ($actionMeta as $key => $meta): ?>
+                    <option value="<?= htmlspecialchars($key) ?>" <?= $filterAction === $key ? 'selected' : '' ?>><?= htmlspecialchars($meta['label']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="field">
             <label for="fromDisplay">From</label>
             <input type="hidden" name="from" id="fromHidden" value="<?= htmlspecialchars($filterFrom) ?>">
             <div class="rdt-display" id="fromDisplay" tabindex="0">
@@ -537,62 +542,71 @@ function buildQuery(array $overrides): string
             </div>
         </div>
         <button type="submit"><i class="fas fa-filter"></i>&nbsp; Filter</button>
-        <?php if ($filterSystem !== '' || $filterFrom !== '' || $filterTo !== ''): ?>
-            <a href="launch_history.php" class="clear-link">Clear</a>
+        <?php if ($filterSystem !== '' || $filterAction !== '' || $filterFrom !== '' || $filterTo !== ''): ?>
+            <a href="audit_log.php" class="clear-link">Clear</a>
         <?php endif; ?>
-        <a href="<?= buildQuery(['export' => 'csv']) ?>" class="clear-link" style="margin-left:auto;"><i class="fas fa-download"></i>&nbsp; Export CSV</a>
     </form>
 
     <div class="history-table-wrap">
         <table class="history-table">
             <thead>
                 <tr>
+                    <th>Action</th>
                     <th>System</th>
-                    <th>Super admin</th>
+                    <th>Details</th>
+                    <th>Admin</th>
                     <th>IP address</th>
-                    <th>Launched at</th>
+                    <th>When</th>
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($launches as $launch): ?>
+            <?php foreach ($entries as $entry): $meta = $actionMeta[$entry['action']] ?? ['label' => $entry['action'], 'icon' => 'fa-circle-info', 'color' => 'info']; ?>
                 <tr>
+                    <td><span class="action-badge <?= htmlspecialchars($meta['color']) ?>"><i class="fas <?= htmlspecialchars($meta['icon']) ?>"></i> <?= htmlspecialchars($meta['label']) ?></span></td>
                     <td>
                         <div class="sys-cell">
-                            <div class="sys-icon-chip <?= htmlspecialchars($launch['system_theme'] ?? 'blue') ?>"><i class="fas <?= htmlspecialchars($launch['system_icon'] ?? 'fa-server') ?>"></i></div>
-                            <?= htmlspecialchars($launch['system_name'] ?? $launch['system_slug']) ?>
+                            <div class="sys-icon-chip <?= htmlspecialchars($entry['system_theme'] ?? 'blue') ?>"><i class="fas <?= htmlspecialchars($entry['system_icon'] ?? 'fa-server') ?>"></i></div>
+                            <?= htmlspecialchars($entry['system_name']) ?>
                         </div>
                     </td>
-                    <td><?= htmlspecialchars($launch['admin_name'] ?? 'Unknown') ?></td>
-                    <td class="ip-cell"><?= htmlspecialchars($launch['ip_address'] ?? '—') ?></td>
-                    <td class="time-cell"><?= date('M j, Y g:i:s A', strtotime($launch['launched_at'])) ?></td>
+                    <td class="details-cell"><?= htmlspecialchars($entry['details'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($entry['admin_name'] ?? 'Unknown') ?></td>
+                    <td class="ip-cell"><?= htmlspecialchars($entry['ip_address'] ?? '—') ?></td>
+                    <td class="time-cell"><?= date('M j, Y g:i:s A', strtotime($entry['created_at'])) ?></td>
                 </tr>
             <?php endforeach; ?>
-            <?php if ($launches === []): ?>
-                <tr><td colspan="4" style="text-align:center; color:var(--text-secondary); padding:30px;">No launches recorded<?= $filterSystem || $filterFrom || $filterTo ? ' for this filter' : '' ?>.</td></tr>
+            <?php if ($entries === []): ?>
+                <tr><td colspan="6" style="text-align:center; color:var(--text-secondary); padding:30px;">No audit entries recorded<?= $filterSystem || $filterAction || $filterFrom || $filterTo ? ' for this filter' : '' ?>.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <div class="history-card-list">
-        <?php foreach ($launches as $launch): ?>
+        <?php foreach ($entries as $entry): $meta = $actionMeta[$entry['action']] ?? ['label' => $entry['action'], 'icon' => 'fa-circle-info', 'color' => 'info']; ?>
             <div class="hist-card">
                 <div class="hist-card-header">
-                    <div class="sys-icon-chip <?= htmlspecialchars($launch['system_theme'] ?? 'blue') ?>"><i class="fas <?= htmlspecialchars($launch['system_icon'] ?? 'fa-server') ?>"></i></div>
-                    <span><?= htmlspecialchars($launch['system_name'] ?? $launch['system_slug']) ?></span>
+                    <div class="sys-cell">
+                        <div class="sys-icon-chip <?= htmlspecialchars($entry['system_theme'] ?? 'blue') ?>"><i class="fas <?= htmlspecialchars($entry['system_icon'] ?? 'fa-server') ?>"></i></div>
+                        <span><?= htmlspecialchars($entry['system_name']) ?></span>
+                    </div>
+                    <span class="action-badge <?= htmlspecialchars($meta['color']) ?>"><i class="fas <?= htmlspecialchars($meta['icon']) ?>"></i> <?= htmlspecialchars($meta['label']) ?></span>
                 </div>
-                <div class="hist-card-row"><span>Super admin</span><span><?= htmlspecialchars($launch['admin_name'] ?? 'Unknown') ?></span></div>
-                <div class="hist-card-row"><span>IP address</span><span class="ip-cell" style="padding:0;"><?= htmlspecialchars($launch['ip_address'] ?? '—') ?></span></div>
-                <div class="hist-card-row"><span>Launched at</span><span class="time-cell" style="padding:0;"><?= date('M j, Y g:i:s A', strtotime($launch['launched_at'])) ?></span></div>
+                <?php if ($entry['details']): ?>
+                    <div class="hist-card-row"><span>Details</span><span><?= htmlspecialchars($entry['details']) ?></span></div>
+                <?php endif; ?>
+                <div class="hist-card-row"><span>Admin</span><span><?= htmlspecialchars($entry['admin_name'] ?? 'Unknown') ?></span></div>
+                <div class="hist-card-row"><span>IP address</span><span class="ip-cell" style="padding:0;"><?= htmlspecialchars($entry['ip_address'] ?? '—') ?></span></div>
+                <div class="hist-card-row"><span>When</span><span class="time-cell" style="padding:0;"><?= date('M j, Y g:i:s A', strtotime($entry['created_at'])) ?></span></div>
             </div>
         <?php endforeach; ?>
-        <?php if ($launches === []): ?>
-            <div style="text-align:center; color:var(--text-secondary); padding:30px;">No launches recorded<?= $filterSystem || $filterFrom || $filterTo ? ' for this filter' : '' ?>.</div>
+        <?php if ($entries === []): ?>
+            <div style="text-align:center; color:var(--text-secondary); padding:30px;">No audit entries recorded<?= $filterSystem || $filterAction || $filterFrom || $filterTo ? ' for this filter' : '' ?>.</div>
         <?php endif; ?>
     </div>
 
     <div class="pagination">
-        <span class="info">Showing <?= count($launches) ?> of <?= $total ?> launch<?= $total === 1 ? '' : 'es' ?></span>
+        <span class="info">Showing <?= count($entries) ?> of <?= $total ?> entr<?= $total === 1 ? 'y' : 'ies' ?></span>
         <div class="pages">
             <a href="<?= buildQuery(['page' => $page - 1]) ?>" class="<?= $page <= 1 ? 'disabled' : '' ?>"><i class="fas fa-chevron-left"></i></a>
             <span class="current"><?= $page ?> / <?= $totalPages ?></span>

@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/system_display.php';
+require_once __DIR__ . '/../includes/audit_log.php';
+require_once __DIR__ . '/../includes/security_alerts.php';
 require_super_admin();
 
 function setNotification(string $type, string $message): void
@@ -23,6 +25,19 @@ function renderNotification(): void
             <button type='button' class='notif-close' onclick=\"closeNotif()\">&times;</button>
           </div>";
     unset($_SESSION['notification']);
+}
+
+function secretAgeInfo(?string $rotatedAt): array
+{
+    if ($rotatedAt === null) {
+        return ['label' => 'Unknown age', 'class' => 'unknown'];
+    }
+
+    $days = (int) floor((time() - strtotime($rotatedAt)) / 86400);
+    $label = $days < 1 ? 'Rotated today' : ('Rotated ' . $days . ' day' . ($days === 1 ? '' : 's') . ' ago');
+    $class = $days < 30 ? 'fresh' : ($days < 90 ? 'aging' : 'stale');
+
+    return ['label' => $label, 'class' => $class];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -49,8 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $secret = bin2hex(random_bytes(32));
                 try {
                     mainLguDb()->prepare(
-                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag, secret_rotated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())'
                     )->execute([$slug, $name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $secret, $isActive, $icon, $themeColor, $shortTag]);
+                    logSystemAudit('create', $slug, $name);
+                    sendSecurityAlert(
+                        'New connected system added',
+                        "\"{$name}\" ({$slug}) was added to Connected Systems by " . $_SESSION['super_admin_name'] . '.'
+                    );
                     $_SESSION['reveal_secret'] = ['name' => $name, 'secret' => $secret];
                     setNotification('success', "\"{$name}\" added. Copy its shared secret below before leaving this page — it won't be shown again.");
                 } catch (\PDOException $e) {
@@ -59,36 +79,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             $id = (int) ($_POST['id'] ?? 0);
+            $oldStmt = mainLguDb()->prepare('SELECT * FROM connected_systems WHERE id = ?');
+            $oldStmt->execute([$id]);
+            $old = $oldStmt->fetch();
+
             mainLguDb()->prepare(
                 'UPDATE connected_systems SET name=?, base_url=?, admin_entry_path=?, sso_consume_path=?, stats_path=?, icon=?, theme_color=?, short_tag=?, is_active=? WHERE id=?'
             )->execute([$name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $icon, $themeColor, $shortTag, $isActive, $id]);
+
+            if ($old) {
+                $new = ['name' => $name, 'base_url' => $baseUrl, 'admin_entry_path' => $adminEntryPath, 'sso_consume_path' => $ssoConsumePath, 'stats_path' => $statsPath ?: null, 'icon' => $icon, 'theme_color' => $themeColor, 'short_tag' => $shortTag, 'is_active' => $isActive];
+                logSystemAudit('update', $old['slug'], $name, summarizeSystemChanges($old, $new));
+            }
             setNotification('success', 'System updated.');
         }
     }
 
     if ($action === 'toggle_active') {
         $id = (int) ($_POST['id'] ?? 0);
-        mainLguDb()->prepare('UPDATE connected_systems SET is_active = NOT is_active WHERE id = ?')->execute([$id]);
-        setNotification('success', 'Status updated.');
+        $stmt = mainLguDb()->prepare('SELECT slug, name, is_active FROM connected_systems WHERE id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        if ($row) {
+            mainLguDb()->prepare('UPDATE connected_systems SET is_active = NOT is_active WHERE id = ?')->execute([$id]);
+            logSystemAudit('toggle_active', $row['slug'], $row['name'], $row['is_active'] ? 'Deactivated' : 'Activated');
+            setNotification('success', 'Status updated.');
+        }
+    }
+
+    if ($action === 'bulk_toggle') {
+        $ids = array_values(array_unique(array_map('intval', $_POST['ids'] ?? [])));
+        $setActive = ($_POST['set_active'] ?? '') === '1' ? 1 : 0;
+
+        if ($ids !== []) {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $rowsStmt = mainLguDb()->prepare("SELECT id, slug, name, is_active FROM connected_systems WHERE id IN ({$placeholders})");
+            $rowsStmt->execute($ids);
+            $rows = $rowsStmt->fetchAll();
+
+            mainLguDb()->prepare("UPDATE connected_systems SET is_active = ? WHERE id IN ({$placeholders})")
+                ->execute(array_merge([$setActive], $ids));
+
+            $changed = 0;
+            foreach ($rows as $row) {
+                if ((int) $row['is_active'] !== $setActive) {
+                    logSystemAudit('toggle_active', $row['slug'], $row['name'], ($setActive ? 'Activated' : 'Deactivated') . ' (bulk)');
+                    $changed++;
+                }
+            }
+            setNotification('success', $changed . ' system' . ($changed === 1 ? '' : 's') . ' ' . ($setActive ? 'activated' : 'deactivated') . '.');
+        }
     }
 
     if ($action === 'rotate_secret') {
         $id = (int) ($_POST['id'] ?? 0);
-        $stmt = mainLguDb()->prepare('SELECT name FROM connected_systems WHERE id = ?');
+        $stmt = mainLguDb()->prepare('SELECT slug, name FROM connected_systems WHERE id = ?');
         $stmt->execute([$id]);
-        $name = $stmt->fetchColumn();
-        if ($name !== false) {
+        $row = $stmt->fetch();
+        if ($row) {
             $secret = bin2hex(random_bytes(32));
-            mainLguDb()->prepare('UPDATE connected_systems SET shared_secret = ? WHERE id = ?')->execute([$secret, $id]);
-            $_SESSION['reveal_secret'] = ['name' => $name, 'secret' => $secret];
-            setNotification('success', "Secret rotated for \"{$name}\" — update it on that system's own config too, it will stop authenticating until you do.");
+            mainLguDb()->prepare('UPDATE connected_systems SET shared_secret = ?, secret_rotated_at = NOW() WHERE id = ?')->execute([$secret, $id]);
+            logSystemAudit('rotate_secret', $row['slug'], $row['name']);
+            sendSecurityAlert(
+                'Shared secret rotated',
+                "The shared secret for \"{$row['name']}\" was rotated by " . $_SESSION['super_admin_name'] . '. Update it on that system\'s own config too, or SSO to it will stop working.'
+            );
+            $_SESSION['reveal_secret'] = ['name' => $row['name'], 'secret' => $secret];
+            setNotification('success', "Secret rotated for \"{$row['name']}\" — update it on that system's own config too, it will stop authenticating until you do.");
         }
     }
 
     if ($action === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
-        mainLguDb()->prepare('DELETE FROM connected_systems WHERE id = ?')->execute([$id]);
-        setNotification('success', 'System removed.');
+        $stmt = mainLguDb()->prepare('SELECT slug, name FROM connected_systems WHERE id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        if ($row) {
+            mainLguDb()->prepare('DELETE FROM connected_systems WHERE id = ?')->execute([$id]);
+            logSystemAudit('delete', $row['slug'], $row['name']);
+            setNotification('success', 'System removed.');
+        }
     }
 
     header('Location: systems.php');
@@ -355,6 +425,48 @@ unset($_SESSION['reveal_secret']);
     .badge.inactive { background: rgba(215,63,82,.18); color: #b3283f; border: 1px solid rgba(215,63,82,.4); }
     [data-theme="dark"] .badge.inactive { color: #ffd9de; }
 
+    .checkbox-col { width: 36px; }
+
+    .secret-age { font-size: .74rem; font-weight: 600; white-space: nowrap; }
+    .secret-age--fresh { color: #1b8a4c; }
+    [data-theme="dark"] .secret-age--fresh { color: #7ce0a3; }
+    .secret-age--aging { color: #a05a00; }
+    [data-theme="dark"] .secret-age--aging { color: #ffca7a; }
+    .secret-age--stale { color: #b3283f; }
+    [data-theme="dark"] .secret-age--stale { color: #ff96a5; }
+    .secret-age--unknown { color: var(--text-secondary); }
+    .bulk-checkbox {
+        width: 17px; height: 17px; accent-color: #4f6ef7; cursor: pointer; flex-shrink: 0;
+    }
+    .sys-card-header .bulk-checkbox { margin-right: 2px; }
+
+    .bulk-bar {
+        position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120%);
+        display: flex; align-items: center; gap: 18px; background: #12193a; color: #eef1ff;
+        padding: 12px 14px 12px 20px; border-radius: 14px; box-shadow: 0 16px 44px rgba(0,0,0,.4);
+        border: 1px solid rgba(120,140,220,.25); z-index: 900; transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+        opacity: 0;
+    }
+    .bulk-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .bulk-bar-count { font-size: .84rem; font-weight: 600; white-space: nowrap; }
+    .bulk-bar-actions { display: flex; gap: 8px; }
+    .bulk-bar-btn {
+        display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 9px; border: none;
+        font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;
+        transition: background .15s, transform .15s;
+    }
+    .bulk-bar-btn.activate { background: rgba(79,201,122,.22); color: #7ce0a3; }
+    .bulk-bar-btn.activate:hover { background: rgba(79,201,122,.35); }
+    .bulk-bar-btn.deactivate { background: rgba(215,63,82,.22); color: #ff96a5; }
+    .bulk-bar-btn.deactivate:hover { background: rgba(215,63,82,.35); }
+    .bulk-bar-btn.clear { background: rgba(120,140,220,.16); color: #c7d0f0; }
+    .bulk-bar-btn.clear:hover { background: rgba(120,140,220,.28); }
+
+    @media (max-width: 640px) {
+        .bulk-bar { left: 14px; right: 14px; bottom: 14px; transform: translateY(120%); width: auto; flex-wrap: wrap; }
+        .bulk-bar.show { transform: translateY(0); }
+    }
+
     /* ── Mobile card view — same dual-markup approach CIMM uses (render both
        table and cards, media query swaps which is visible) rather than a
        CSS-only table transform ── */
@@ -506,6 +618,10 @@ unset($_SESSION['reveal_secret']);
         <li><a href="dashboard.php" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
         <li><a href="systems.php" class="sidebar-link active"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
         <li><a href="launch_history.php" class="sidebar-link"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
+        <li><a href="analytics.php" class="sidebar-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+        <li><a href="audit_log.php" class="sidebar-link"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
+        <li><a href="team.php" class="sidebar-link"><i class="fas fa-users"></i><span>Team</span></a></li>
+        <li><a href="security.php" class="sidebar-link"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
     </ul>
     <div class="sidebar-bottom">
         <div class="sidebar-user">
@@ -536,15 +652,18 @@ unset($_SESSION['reveal_secret']);
         <table class="systems-table">
             <thead>
                 <tr>
+                    <th class="checkbox-col"><input type="checkbox" class="bulk-checkbox bulk-select-all" id="selectAllCheckbox" aria-label="Select all"></th>
                     <th>System</th>
                     <th>Base URL</th>
                     <th>Status</th>
+                    <th>Secret</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($systems as $system): ?>
+            <?php foreach ($systems as $system): $age = secretAgeInfo($system['secret_rotated_at'] ?? null); ?>
                 <tr>
+                    <td class="checkbox-col"><input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>"></td>
                     <td>
                         <div class="sys-name-cell">
                             <div class="sys-icon-chip <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
@@ -564,6 +683,7 @@ unset($_SESSION['reveal_secret']);
                             </button>
                         </form>
                     </td>
+                    <td><span class="secret-age secret-age--<?= $age['class'] ?>"><?= htmlspecialchars($age['label']) ?></span></td>
                     <td>
                         <div class="row-actions">
                             <button type="button" class="row-btn edit-btn" title="Edit"
@@ -588,16 +708,17 @@ unset($_SESSION['reveal_secret']);
                 </tr>
             <?php endforeach; ?>
             <?php if ($systems === []): ?>
-                <tr><td colspan="4" style="text-align:center; color:var(--text-secondary); padding:30px;">No connected systems yet.</td></tr>
+                <tr><td colspan="6" style="text-align:center; color:var(--text-secondary); padding:30px;">No connected systems yet.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <div class="systems-card-list">
-        <?php foreach ($systems as $system): ?>
+        <?php foreach ($systems as $system): $age = secretAgeInfo($system['secret_rotated_at'] ?? null); ?>
             <div class="sys-card">
                 <div class="sys-card-header">
+                    <input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>">
                     <div class="sys-icon-chip <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
                     <div>
                         <div class="sys-card-name"><?= htmlspecialchars($system['name']) ?></div>
@@ -617,6 +738,10 @@ unset($_SESSION['reveal_secret']);
                             <?= $system['is_active'] ? '● Active' : '● Inactive' ?>
                         </button>
                     </form>
+                </div>
+                <div class="sys-card-row">
+                    <span>Secret</span>
+                    <span class="secret-age secret-age--<?= $age['class'] ?>"><?= htmlspecialchars($age['label']) ?></span>
                 </div>
                 <div class="sys-card-actions">
                     <button type="button" class="row-btn edit-btn" title="Edit"
@@ -644,6 +769,34 @@ unset($_SESSION['reveal_secret']);
         <?php endif; ?>
     </div>
 </main>
+
+<!-- Bulk action bar — appears once at least one system is selected -->
+<div class="bulk-bar" id="bulkBar">
+    <span class="bulk-bar-count"><span id="bulkCount">0</span> selected</span>
+    <div class="bulk-bar-actions">
+        <button type="button" class="bulk-bar-btn activate" id="bulkActivateBtn"><i class="fas fa-check"></i> Activate</button>
+        <button type="button" class="bulk-bar-btn deactivate" id="bulkDeactivateBtn"><i class="fas fa-ban"></i> Deactivate</button>
+        <button type="button" class="bulk-bar-btn clear" id="bulkClearBtn"><i class="fas fa-xmark"></i> Clear</button>
+    </div>
+</div>
+<form method="post" id="bulkForm" style="display:none;">
+    <input type="hidden" name="action" value="bulk_toggle">
+    <input type="hidden" name="set_active" id="bulkSetActive" value="">
+    <div id="bulkIdsContainer"></div>
+</form>
+
+<!-- Bulk action confirmation -->
+<div class="modal-backdrop" id="bulkConfirmModal">
+    <div class="modal-card">
+        <div class="modal-icon-wrap modal-icon-wrap--info"><i class="fas fa-layer-group"></i></div>
+        <h2 id="bulkConfirmTitle">Update <span id="bulkConfirmCount">0</span> systems?</h2>
+        <p class="modal-sub" id="bulkConfirmSub"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelBulkConfirm">Cancel</button>
+            <button type="button" class="btn-confirm btn-confirm--info" id="confirmBulkBtn">Confirm</button>
+        </div>
+    </div>
+</div>
 
 <!-- Reveal secret modal (shown once right after create/rotate) -->
 <div class="modal-backdrop<?= $revealSecret ? ' show' : '' ?>" id="revealSecretModal">
@@ -939,6 +1092,88 @@ setTimeout(closeNotif, 4500);
         form.submit();
     });
     confirmNo.addEventListener('click', function () { confirmModal.classList.remove('show'); });
+})();
+
+// Bulk select + bulk activate/deactivate
+(function () {
+    var selected = new Set();
+    var bar = document.getElementById('bulkBar');
+    var countEl = document.getElementById('bulkCount');
+    var selectAll = document.getElementById('selectAllCheckbox');
+    var totalCheckboxes = new Set(Array.prototype.slice.call(document.querySelectorAll('.bulk-checkbox[data-id]')).map(function (cb) { return cb.dataset.id; })).size;
+
+    function checkboxesFor(id) {
+        return document.querySelectorAll('.bulk-checkbox[data-id="' + id + '"]');
+    }
+
+    function syncRow(id, checked) {
+        checkboxesFor(id).forEach(function (cb) { cb.checked = checked; });
+    }
+
+    function updateBar() {
+        countEl.textContent = selected.size;
+        bar.classList.toggle('show', selected.size > 0);
+        if (selectAll) selectAll.checked = totalCheckboxes > 0 && selected.size === totalCheckboxes;
+    }
+
+    document.querySelectorAll('.bulk-checkbox[data-id]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            var id = cb.dataset.id;
+            if (cb.checked) { selected.add(id); } else { selected.delete(id); }
+            syncRow(id, cb.checked);
+            updateBar();
+        });
+    });
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            var ids = Array.prototype.slice.call(document.querySelectorAll('.systems-table .bulk-checkbox[data-id]')).map(function (cb) { return cb.dataset.id; });
+            ids.forEach(function (id) {
+                if (selectAll.checked) { selected.add(id); } else { selected.delete(id); }
+                syncRow(id, selectAll.checked);
+            });
+            updateBar();
+        });
+    }
+
+    document.getElementById('bulkClearBtn').addEventListener('click', function () {
+        selected.forEach(function (id) { syncRow(id, false); });
+        selected.clear();
+        updateBar();
+    });
+
+    var bulkForm = document.getElementById('bulkForm');
+    var bulkSetActive = document.getElementById('bulkSetActive');
+    var bulkIdsContainer = document.getElementById('bulkIdsContainer');
+    var confirmModal = document.getElementById('bulkConfirmModal');
+    var confirmCount = document.getElementById('bulkConfirmCount');
+    var confirmSub = document.getElementById('bulkConfirmSub');
+    var pendingSetActive = null;
+
+    function openBulkConfirm(setActive) {
+        pendingSetActive = setActive;
+        confirmCount.textContent = selected.size;
+        confirmSub.textContent = setActive
+            ? 'These systems will reappear on the dashboard immediately.'
+            : 'These systems will be hidden from the dashboard until reactivated.';
+        confirmModal.classList.add('show');
+    }
+
+    document.getElementById('bulkActivateBtn').addEventListener('click', function () { openBulkConfirm(true); });
+    document.getElementById('bulkDeactivateBtn').addEventListener('click', function () { openBulkConfirm(false); });
+    document.getElementById('cancelBulkConfirm').addEventListener('click', function () { confirmModal.classList.remove('show'); });
+    document.getElementById('confirmBulkBtn').addEventListener('click', function () {
+        bulkSetActive.value = pendingSetActive ? '1' : '0';
+        bulkIdsContainer.innerHTML = '';
+        selected.forEach(function (id) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = id;
+            bulkIdsContainer.appendChild(input);
+        });
+        bulkForm.submit();
+    });
 })();
 
 // Rotate secret modal

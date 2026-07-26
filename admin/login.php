@@ -63,6 +63,26 @@ if (isset($_GET['reset_token'])) {
     exit;
 }
 
+// ── Consume a Super Admin invite link ───────────────────────────────────
+if (isset($_GET['invite_token'])) {
+    $token = (string) $_GET['invite_token'];
+    $stmt = mainLguDb()->prepare('SELECT id, email, full_name FROM super_admins WHERE invite_token = ? AND invite_token_expires > NOW() LIMIT 1');
+    $stmt->execute([$token]);
+    $admin = $stmt->fetch();
+
+    if ($admin) {
+        $_SESSION['show_invite_modal'] = true;
+        $_SESSION['invite_admin_id'] = $admin['id'];
+        $_SESSION['invite_token'] = $token;
+        $_SESSION['invite_full_name'] = $admin['full_name'];
+    } else {
+        setNotification('error', 'That invite link is invalid or has expired. Ask whoever invited you to send a new one.');
+    }
+
+    header('Location: login.php');
+    exit;
+}
+
 // ── POST actions ─────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'login';
@@ -83,8 +103,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($isLocked) {
                 $minutesLeft = (int) ceil((strtotime($admin['locked_until']) - time()) / 60);
                 setNotification('error', "Too many failed attempts. Try again in {$minutesLeft} minute" . ($minutesLeft === 1 ? '' : 's') . '.');
+            } elseif ($admin && $admin['invite_token'] !== null) {
+                setNotification('error', 'Your account is pending setup — check your email for the invite link, or ask another Super Admin to resend it.');
+            } elseif ($admin && !$admin['is_active']) {
+                setNotification('error', 'This account has been deactivated. Contact another Super Admin for access.');
             } elseif ($admin && password_verify($password, $admin['password_hash'])) {
                 mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?')->execute([$admin['id']]);
+
+                if ($admin['totp_enabled']) {
+                    $_SESSION['pending_admin_id'] = $admin['id'];
+                    $_SESSION['pending_totp_attempts'] = 0;
+                    $_SESSION['show_totp_form'] = true;
+                    header('Location: login.php');
+                    exit;
+                }
 
                 if (!$requireOtp) {
                     session_regenerate_id(true);
@@ -123,6 +155,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($attempts >= LOGIN_MAX_ATTEMPTS) {
                         mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?')
                             ->execute([LOGIN_LOCKOUT_MINUTES, $admin['id']]);
+                        require_once __DIR__ . '/../includes/security_alerts.php';
+                        sendSecurityAlert(
+                            'Account locked after failed logins',
+                            'Your Super Admin account was locked for ' . LOGIN_LOCKOUT_MINUTES . ' minutes after ' . LOGIN_MAX_ATTEMPTS . ' incorrect password attempts in a row.',
+                            $admin['email']
+                        );
                         setNotification('error', 'Too many failed attempts. Your account is locked for ' . LOGIN_LOCKOUT_MINUTES . ' minutes.');
                     } else {
                         mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = ? WHERE id = ?')->execute([$attempts, $admin['id']]);
@@ -164,6 +202,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $admin = $stmt->fetch();
 
             unset($_SESSION['pending_admin_id'], $_SESSION['pending_otp'], $_SESSION['pending_otp_time'], $_SESSION['pending_otp_attempts'], $_SESSION['pending_otp_resend_count'], $_SESSION['show_otp_form']);
+
+            session_regenerate_id(true);
+            $_SESSION['super_admin_id'] = $admin['id'];
+            $_SESSION['super_admin_name'] = $admin['full_name'];
+            $_SESSION['super_admin_email'] = $admin['email'];
+            mainLguDb()->prepare('UPDATE super_admins SET last_login = NOW() WHERE id = ?')->execute([$admin['id']]);
+
+            header('Location: dashboard.php');
+            exit;
+        }
+
+        header('Location: login.php');
+        exit;
+    }
+
+    if ($action === 'totp_verify') {
+        require_once __DIR__ . '/../includes/totp.php';
+
+        $entered = trim($_POST['code'] ?? '');
+        $valid = !empty($_SESSION['pending_admin_id']);
+
+        if ($valid) {
+            $stmt = mainLguDb()->prepare('SELECT * FROM super_admins WHERE id = ?');
+            $stmt->execute([$_SESSION['pending_admin_id']]);
+            $admin = $stmt->fetch();
+            $valid = $admin && $admin['totp_enabled'];
+        }
+
+        $usedRecoveryCodeId = null;
+        if ($valid && !totp_verify($admin['totp_secret'], $entered)) {
+            // Not a valid TOTP code — see if it matches an unused recovery code instead.
+            $valid = false;
+            if (preg_match('/^[A-Z0-9]{5}-[A-Z0-9]{5}$/', strtoupper($entered))) {
+                $codes = mainLguDb()->prepare('SELECT id, code_hash FROM super_admin_recovery_codes WHERE super_admin_id = ? AND used_at IS NULL');
+                $codes->execute([$admin['id']]);
+                foreach ($codes->fetchAll() as $row) {
+                    if (password_verify(strtoupper($entered), $row['code_hash'])) {
+                        $valid = true;
+                        $usedRecoveryCodeId = $row['id'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$valid) {
+            $_SESSION['pending_totp_attempts'] = ($_SESSION['pending_totp_attempts'] ?? 0) + 1;
+            if ($_SESSION['pending_totp_attempts'] >= 5) {
+                unset($_SESSION['pending_admin_id'], $_SESSION['pending_totp_attempts'], $_SESSION['show_totp_form']);
+                setNotification('error', 'Too many incorrect attempts. Please log in again.');
+            } else {
+                setNotification('error', 'Incorrect code. Please try again.');
+            }
+        } else {
+            if ($usedRecoveryCodeId !== null) {
+                mainLguDb()->prepare('UPDATE super_admin_recovery_codes SET used_at = NOW() WHERE id = ?')->execute([$usedRecoveryCodeId]);
+            }
+
+            unset($_SESSION['pending_admin_id'], $_SESSION['pending_totp_attempts'], $_SESSION['show_totp_form']);
 
             session_regenerate_id(true);
             $_SESSION['super_admin_id'] = $admin['id'];
@@ -273,10 +370,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: login.php');
         exit;
     }
+
+    if ($action === 'invite_accept') {
+        $newPassword = (string) ($_POST['new_password'] ?? '');
+        $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
+        $adminId = $_SESSION['invite_admin_id'] ?? null;
+        $token = $_SESSION['invite_token'] ?? null;
+
+        $stmt = mainLguDb()->prepare('SELECT id FROM super_admins WHERE id = ? AND invite_token = ? AND invite_token_expires > NOW()');
+        $stmt->execute([$adminId, $token]);
+        $valid = (bool) $stmt->fetch();
+
+        if (!$valid) {
+            setNotification('error', 'This invite link is no longer valid. Ask another Super Admin to send a new one.');
+        } elseif (strlen($newPassword) < 8 || $newPassword !== $confirmPassword) {
+            setNotification('error', 'Passwords must match and be at least 8 characters.');
+            header('Location: login.php');
+            exit;
+        } else {
+            mainLguDb()->prepare('UPDATE super_admins SET password_hash = ?, is_active = 1, invite_token = NULL, invite_token_expires = NULL WHERE id = ?')
+                ->execute([password_hash($newPassword, PASSWORD_DEFAULT), $adminId]);
+            setNotification('success', 'Account activated. You can now sign in.');
+        }
+
+        unset($_SESSION['show_invite_modal'], $_SESSION['invite_admin_id'], $_SESSION['invite_token'], $_SESSION['invite_full_name']);
+        header('Location: login.php');
+        exit;
+    }
 }
 
 $showOtpForm = !empty($_SESSION['show_otp_form']);
+$showTotpForm = !empty($_SESSION['show_totp_form']);
 $showResetModal = !empty($_SESSION['show_reset_modal']);
+$showInviteModal = !empty($_SESSION['show_invite_modal']);
 $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_time'] ?? time()))) : 0;
 ?>
 <!DOCTYPE html>
@@ -585,7 +711,17 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
             </div>
         </div>
 
-        <?php if (!$showOtpForm): ?>
+        <?php if ($showTotpForm): ?>
+            <h1>Enter your authenticator code</h1>
+            <p class="sub">Enter the 6-digit code from your authenticator app, or one of your backup recovery codes.</p>
+            <form method="post" autocomplete="off" id="totpLoginForm">
+                <input type="hidden" name="action" value="totp_verify">
+                <div class="otp-boxes">
+                    <input type="text" name="code" id="totpLoginInput" maxlength="11" placeholder="000000" required autofocus style="width:100%; letter-spacing:.3em; text-align:center; text-transform:uppercase;">
+                </div>
+                <button type="submit" class="btn-primary">Verify</button>
+            </form>
+        <?php elseif (!$showOtpForm): ?>
             <form method="post" autocomplete="off" id="loginForm">
                 <input type="hidden" name="action" value="login">
                 <div class="input-box">
@@ -663,6 +799,31 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
             </div>
             <div class="modal-actions">
                 <button type="submit" class="btn-primary">Reset password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Invite acceptance modal -->
+<div class="modal-backdrop<?= $showInviteModal ? ' show' : '' ?>" id="inviteModal">
+    <div class="modal-card">
+        <div class="modal-icon">👋</div>
+        <h2>Welcome<?= !empty($_SESSION['invite_full_name']) ? ', ' . htmlspecialchars($_SESSION['invite_full_name']) : '' ?></h2>
+        <p class="modal-sub">Set a password to activate your Super Admin account.</p>
+        <form method="post" id="inviteForm">
+            <input type="hidden" name="action" value="invite_accept">
+            <div class="input-box has-toggle">
+                <label for="invite_new_password">Password</label>
+                <input type="password" id="invite_new_password" name="new_password" minlength="8" required>
+                <button type="button" class="toggle-eye" data-target="invite_new_password" tabindex="-1" aria-label="Show password"><i class="fas fa-eye"></i></button>
+            </div>
+            <div class="input-box has-toggle">
+                <label for="invite_confirm_password">Confirm password</label>
+                <input type="password" id="invite_confirm_password" name="confirm_password" minlength="8" required>
+                <button type="button" class="toggle-eye" data-target="invite_confirm_password" tabindex="-1" aria-label="Show password"><i class="fas fa-eye"></i></button>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Activate account</button>
             </div>
         </form>
     </div>

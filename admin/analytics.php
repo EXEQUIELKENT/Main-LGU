@@ -1,20 +1,52 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/system_display.php';
 require_super_admin();
 
-$systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fetchAll();
-// Stats are fetched client-side after page load (system_stats_ajax.php) so a
-// slow/unreachable connected system's curl timeout (up to 2.5s each) can't
-// hold up the dashboard itself from rendering.
+$requestedRange = (int) ($_GET['range'] ?? 30);
+$days = in_array($requestedRange, [7, 30, 90], true) ? $requestedRange : 30;
+
+$dailyStmt = mainLguDb()->prepare('SELECT DATE(launched_at) d, COUNT(*) c FROM sso_launch_log WHERE launched_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(launched_at)');
+$dailyStmt->execute([$days - 1]);
+$dailyRaw = array_column($dailyStmt->fetchAll(), 'c', 'd');
+
+$daily = [];
+for ($i = $days - 1; $i >= 0; $i--) {
+    $date = date('Y-m-d', strtotime("-{$i} days"));
+    $daily[] = ['date' => $date, 'count' => (int) ($dailyRaw[$date] ?? 0)];
+}
+
+$totalLaunches = array_sum(array_column($daily, 'count'));
+$maxDailyCount = max(array_column($daily, 'count'));
+
+$busiest = null;
+foreach ($daily as $d) {
+    if ($d['count'] > 0 && ($busiest === null || $d['count'] > $busiest['count'])) {
+        $busiest = $d;
+    }
+}
+
+$bySystemStmt = mainLguDb()->prepare("
+    SELECT l.system_slug, COUNT(*) c, s.name, s.icon, s.theme_color
+    FROM sso_launch_log l
+    LEFT JOIN connected_systems s ON s.slug = l.system_slug
+    WHERE l.launched_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+    GROUP BY l.system_slug
+    ORDER BY c DESC
+");
+$bySystemStmt->execute([$days - 1]);
+$bySystem = $bySystemStmt->fetchAll();
+$maxSystemCount = $bySystem !== [] ? $bySystem[0]['c'] : 0;
+$mostActive = $bySystem[0] ?? null;
+
+$rangeLabel = "last {$days} days";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Super Admin Dashboard — InfraGovServices</title>
+<title>Analytics — InfraGovServices</title>
 <link rel="icon" href="../public/logocityhall.png" type="image/png">
 <script>
 (function () {
@@ -40,9 +72,11 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         --text-primary: #101a3a;
         --text-secondary: #5b6690;
         --header-bg: rgba(255,255,255,.84);
+        --input-bg: rgba(255,255,255,.7);
         --input-border: rgba(80,100,180,.22);
         --scrollbar-track: #eef1fb;
         --scrollbar-thumb: #1a56db;
+        --tooltip-bg: #12193a;
     }
     [data-theme="dark"] {
         --bg-scrim: linear-gradient(160deg, rgba(5,10,25,.78) 0%, rgba(10,22,40,.74) 55%, rgba(13,31,60,.70) 100%);
@@ -51,9 +85,11 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         --text-primary: #fff;
         --text-secondary: #8b95c0;
         --header-bg: rgba(8,13,32,.84);
+        --input-bg: rgba(6,12,30,.55);
         --input-border: rgba(120,140,220,.22);
         --scrollbar-track: #0a1628;
         --scrollbar-thumb: #1a56db;
+        --tooltip-bg: #0a0f24;
     }
     * { box-sizing: border-box; }
     html { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
@@ -142,7 +178,6 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         border: 1px solid rgba(255,255,255,.14); align-items: center; justify-content: center; cursor: pointer; font-size: .95rem;
     }
 
-    /* ── Top utility bar (clock + theme toggle), sits beside the sidebar ── */
     .topbar {
         position: sticky; top: 0; z-index: 200; margin-left: var(--sidebar-w);
         background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
@@ -160,7 +195,6 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     .header-clock i { font-size: .72rem; opacity: .8; }
     .clock-date::after { content: ' · '; }
 
-    /* Theme toggle switch — same visual language as the public site */
     .theme-toggle { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
     .theme-track {
         width: 46px; height: 25px; background: rgba(120,140,220,.16); border: 1px solid var(--card-border);
@@ -181,7 +215,6 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     .main-content { margin-left: var(--sidebar-w); transition: margin-left .3s ease; }
     .sidebar.collapsed ~ .main-content, html[data-sidebar-collapsed="true"] .main-content { margin-left: var(--sidebar-w-collapsed); }
 
-    /* ── Mobile: sidebar becomes an off-canvas drawer, topbar/content full-width ── */
     @media (max-width: 900px) {
         .sidebar { left: -100%; width: 260px; box-shadow: none; }
         .sidebar.mobile-active { left: 0; box-shadow: 0 0 50px rgba(0,0,0,.45); }
@@ -217,168 +250,106 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         .theme-thumb .fa-moon { color: #93c5fd; }
     }
 
-    main { max-width: 1500px; margin: 0; padding: 34px 32px 60px; position: relative; z-index: 1; transition: max-width .3s ease; }
-    .sidebar.collapsed ~ .main-content main, html[data-sidebar-collapsed="true"] .main-content main { max-width: 1596px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 34px 40px 60px; position: relative; z-index: 1; }
 
-    @keyframes dashCardIn {
-        from { opacity: 0; transform: translateY(18px) scale(.97); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
+    .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .page-head h1 { font-size: 1.15rem; color: var(--text-primary); margin: 0; }
+    .range-tabs { display: flex; gap: 6px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 4px; }
+    .range-tabs a {
+        padding: 7px 14px; border-radius: 7px; font-size: .8rem; font-weight: 600; text-decoration: none;
+        color: var(--text-secondary); transition: background .15s, color .15s;
     }
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 36px; }
+    .range-tabs a:hover { background: rgba(79,110,247,.1); }
+    .range-tabs a.active { background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-tile {
-        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
-        padding: 18px 20px; backdrop-filter: blur(14px); transition: background .3s, border-color .3s, transform .2s;
-        display: flex; align-items: center; gap: 14px;
-        animation: dashCardIn .5s cubic-bezier(.34,1.56,.64,1) backwards;
+        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+        padding: 18px 20px; backdrop-filter: blur(14px); display: flex; align-items: center; gap: 14px;
     }
-    .stat-tile:nth-child(1) { animation-delay: .04s; }
-    .stat-tile:nth-child(2) { animation-delay: .09s; }
-    .stat-tile:nth-child(3) { animation-delay: .14s; }
-    .stat-tile:nth-child(4) { animation-delay: .19s; }
-    .stat-tile:hover { transform: translateY(-2px); }
-    .stat-icon {
+    .stat-tile .stat-icon {
         width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
         font-size: 1.05rem; color: #fff; flex-shrink: 0; box-shadow: 0 6px 16px rgba(0,0,0,.15);
+        background: linear-gradient(135deg,#4f6ef7,#3f5adf);
     }
-    .stat-icon.blue   { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
-    .stat-icon.green  { background: linear-gradient(135deg,#10b981,#047857); }
-    .stat-icon.amber  { background: linear-gradient(135deg,#f59e0b,#d97706); }
-    .stat-icon.orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
-    .stat-icon.purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
-    .stat-icon.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
-    .stat-icon.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
-    .stat-icon.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
-    .stat-tile .stat-fallback { color: var(--text-secondary); font-size: .95rem; font-weight: 500; }
     .stat-tile .label { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .stat-tile .value { font-family: 'DM Mono', monospace; font-size: 1.4rem; color: var(--text-primary); font-weight: 500; }
-    .stat-skeleton {
-        display: inline-block; width: 44px; height: 1.15rem; border-radius: 5px;
-        background: linear-gradient(90deg, rgba(120,140,220,.14) 25%, rgba(120,140,220,.28) 37%, rgba(120,140,220,.14) 63%);
-        background-size: 400% 100%; animation: statSkeletonPulse 1.4s ease infinite;
-    }
-    @keyframes statSkeletonPulse { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+    .stat-tile .value .unit { font-size: .8rem; color: var(--text-secondary); font-family: 'Poppins', sans-serif; margin-left: 4px; }
 
-    /* ── Department cards — lifted from public/styles.css .db-svc3-* ── */
-    .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    @media (max-width: 1024px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .svc-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
+        padding: 22px 24px; backdrop-filter: blur(14px); margin-bottom: 20px;
+    }
+    .chart-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .chart-card-head h2 { font-size: .92rem; color: var(--text-primary); margin: 0; }
+    .chart-toggle-btn {
+        border: 1px solid var(--card-border); background: none; color: var(--text-secondary); font-size: .74rem;
+        font-weight: 600; padding: 6px 12px; border-radius: 7px; cursor: pointer; font-family: inherit;
+    }
+    .chart-toggle-btn:hover { background: rgba(120,140,220,.1); color: var(--text-primary); }
 
-    .svc-card {
-        position: relative; border-radius: 24px; padding: 28px 26px 26px; min-height: 280px;
-        display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,.07);
-        transition: transform .4s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease, border-color .3s ease;
-        text-decoration: none;
-        animation: dashCardIn .55s cubic-bezier(.34,1.56,.64,1) backwards;
+    /* Daily trend bar chart */
+    .trend-chart { display: flex; align-items: flex-end; gap: 3px; height: 160px; position: relative; }
+    .trend-bar-col {
+        flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+        align-items: center; position: relative; cursor: pointer;
     }
-    .svc-card:nth-child(1) { animation-delay: .1s; }
-    .svc-card:nth-child(2) { animation-delay: .16s; }
-    .svc-card:nth-child(3) { animation-delay: .22s; }
-    .svc-card:nth-child(4) { animation-delay: .28s; }
-    .svc-card:nth-child(5) { animation-delay: .34s; }
-    .svc-blue   { background: linear-gradient(145deg, #0d1f52 0%, #1a3a8a 55%, #1e56c8 100%); }
-    .svc-orange { background: linear-gradient(145deg, #3d1400 0%, #8b3000 55%, #c84b10 100%); }
-    .svc-purple { background: linear-gradient(145deg, #1e0b4a 0%, #4c1f8f 55%, #7c3fd4 100%); }
-    .svc-rose   { background: linear-gradient(145deg, #3a0020 0%, #8b0045 55%, #c8185a 100%); }
-    .svc-teal   { background: linear-gradient(145deg, #003030 0%, #0a5f5f 55%, #0d9e9e 100%); }
-    .svc-amber  { background: linear-gradient(145deg, #3d2000 0%, #a05a00 50%, #d4920a 100%); }
+    .trend-bar {
+        width: 100%; max-width: 22px; background: linear-gradient(180deg,#4f6ef7,#3f5adf);
+        border-radius: 4px 4px 0 0; transition: opacity .12s; min-height: 2px;
+    }
+    .trend-bar-col:hover .trend-bar, .trend-bar-col:focus .trend-bar { opacity: .72; }
+    .trend-bar-label {
+        position: absolute; bottom: -20px; font-size: .64rem; color: var(--text-secondary);
+        white-space: nowrap; left: 50%; transform: translateX(-50%);
+    }
+    .trend-tooltip {
+        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-8px);
+        background: var(--tooltip-bg); color: #fff; padding: 6px 10px; border-radius: 7px; font-size: .72rem;
+        white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10;
+        box-shadow: 0 6px 18px rgba(0,0,0,.3);
+    }
+    .trend-bar-col:hover .trend-tooltip, .trend-bar-col:focus .trend-tooltip { opacity: 1; }
+    .trend-tooltip strong { font-family: 'DM Mono', monospace; }
 
-    .svc-blue:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(30,86,200,.5); border-color: rgba(59,130,246,.5); }
-    .svc-orange:hover { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(200,75,16,.5); border-color: rgba(251,146,60,.5); }
-    .svc-purple:hover { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(124,63,212,.5); border-color: rgba(167,139,250,.5); }
-    .svc-rose:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(200,24,90,.5); border-color: rgba(251,113,133,.5); }
-    .svc-teal:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(13,158,158,.5); border-color: rgba(45,212,191,.5); }
-    .svc-amber:hover  { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(212,146,10,.5); border-color: rgba(212,146,10,.5); }
+    .trend-table { display: none; width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .trend-table.show { display: table; }
+    .trend-chart.hide { display: none; }
+    .trend-table th { text-align: left; color: var(--text-secondary); font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px; border-bottom: 1px solid var(--card-border); }
+    .trend-table td { padding: 7px 10px; border-bottom: 1px solid var(--card-border); color: var(--text-primary); font-family: 'DM Mono', monospace; }
+    .trend-table tbody tr:last-child td { border-bottom: none; }
 
-    .svc-bg-num {
-        position: absolute; bottom: -12px; right: 14px; font-size: 6.5rem; font-weight: 900;
-        color: rgba(255,255,255,.06); line-height: 1; letter-spacing: -3px; pointer-events: none;
-        transition: transform .4s ease, color .3s;
+    /* Ranked per-system bar list */
+    .rank-list { display: flex; flex-direction: column; gap: 12px; }
+    .rank-row { display: flex; align-items: center; gap: 12px; }
+    .rank-label { display: flex; align-items: center; gap: 8px; width: 190px; flex-shrink: 0; overflow: hidden; }
+    .rank-label span:last-child { font-size: .82rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sys-icon-chip {
+        width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: .7rem; flex-shrink: 0;
     }
-    .svc-card:hover .svc-bg-num { transform: translateY(-8px); color: rgba(255,255,255,.1); }
+    .sys-icon-chip.blue   { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+    .sys-icon-chip.orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .sys-icon-chip.purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+    .sys-icon-chip.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
+    .sys-icon-chip.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
+    .sys-icon-chip.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
+    .rank-track { flex: 1; height: 20px; background: rgba(120,140,220,.1); border-radius: 6px; overflow: hidden; }
+    .rank-fill { height: 100%; border-radius: 6px; min-width: 6px; }
+    .rank-fill.blue   { background: linear-gradient(90deg,#3b82f6,#1d4ed8); }
+    .rank-fill.orange { background: linear-gradient(90deg,#f59e0b,#d97706); }
+    .rank-fill.purple { background: linear-gradient(90deg,#8b5cf6,#6d28d9); }
+    .rank-fill.rose   { background: linear-gradient(90deg,#fb7185,#c8185a); }
+    .rank-fill.teal   { background: linear-gradient(90deg,#14b8a6,#0f766e); }
+    .rank-fill.amber  { background: linear-gradient(90deg,#d4920a,#a05a00); }
+    .rank-count { font-family: 'DM Mono', monospace; font-size: .82rem; color: var(--text-primary); width: 34px; text-align: right; flex-shrink: 0; }
 
-    .svc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .svc-chip {
-        width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,.14);
-        border: 1px solid rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center;
-        font-size: 1.05rem; color: #fff; backdrop-filter: blur(8px); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
-        flex-shrink: 0;
-    }
-    .svc-card:hover .svc-chip { transform: scale(1.12) rotate(-6deg); }
-    .svc-tag {
-        display: inline-flex; padding: 4px 12px; border-radius: 50px; font-size: .65rem; font-weight: 900;
-        text-transform: uppercase; letter-spacing: 1.5px; background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.85); backdrop-filter: blur(6px);
-    }
-    .svc-status {
-        position: absolute; top: 20px; left: 50%; transform: translateX(-8px);
-    }
-    .svc-body { flex: 1; }
-    .svc-title { font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.3; text-shadow: 0 1px 6px rgba(0,0,0,.3); }
-    .svc-desc { font-size: .8rem; color: rgba(255,255,255,.62); line-height: 1.6; margin: 0 0 18px; }
-    .svc-url { font-size: .68rem; color: rgba(255,255,255,.4); margin: -10px 0 14px; word-break: break-all; }
-    .svc-btn {
-        display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 50px;
-        background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.35); color: #fff;
-        font-size: .78rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: .8px;
-        width: fit-content; margin-top: auto; transition: background .2s, box-shadow .25s;
-    }
-    .svc-btn:hover { background: rgba(255,255,255,.28); box-shadow: 0 0 20px rgba(255,255,255,.2); }
-    .svc-btn i { font-size: .72rem; transition: transform .2s; }
-    .svc-btn:hover i { transform: translateX(4px); }
+    .empty-note { text-align: center; color: var(--text-secondary); padding: 30px; font-size: .85rem; }
 
-    .badge {
-        font-size: .65rem; padding: 3px 10px; border-radius: 999px; font-weight: 700; letter-spacing: .02em;
-    }
-    .badge.active { background: rgba(79,201,122,.18); color: #d1fae0; border: 1px solid rgba(79,201,122,.4); }
-    .badge.inactive { background: rgba(215,63,82,.18); color: #ffd9de; border: 1px solid rgba(215,63,82,.4); }
-
-    /* ── Logout confirmation modal ─────────────────────────── */
-    .modal-backdrop {
-        position: fixed; inset: 0; background: rgba(3,6,16,.55); backdrop-filter: blur(6px);
-        display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
-    }
-    .modal-backdrop.show { display: flex; }
-    .modal-card {
-        background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px;
-        padding: 30px 26px 24px; max-width: 340px; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,.4);
-        backdrop-filter: blur(22px); text-align: center; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);
-    }
-    @keyframes modalPop { from { transform: translateY(20px) scale(.94); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-    .modal-icon-wrap {
-        width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 16px;
-        background: linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.08));
-        border: 1.5px solid rgba(239,68,68,.28); display: flex; align-items: center; justify-content: center;
-        color: #ef4444; font-size: 1.3rem;
-    }
-    .modal-icon-wrap--info {
-        background: linear-gradient(135deg, rgba(79,110,247,.18), rgba(79,110,247,.08));
-        border-color: rgba(79,110,247,.3); color: #4f6ef7;
-    }
-    .modal-card h2 { color: var(--text-primary); font-size: 1.05rem; margin: 0 0 8px; }
-    .modal-card p.modal-sub { color: var(--text-secondary); font-size: .85rem; margin: 0 0 22px; line-height: 1.5; }
-    .modal-actions { display: flex; gap: 10px; }
-    .modal-actions button {
-        flex: 1; padding: 11px 0; border-radius: 10px; border: none; font-weight: 600; font-size: .85rem;
-        cursor: pointer; font-family: inherit; transition: all .18s;
-    }
-    .modal-actions .btn-cancel { background: rgba(120,140,220,.14); color: var(--text-primary); border: 1px solid var(--card-border); }
-    .modal-actions .btn-cancel:hover { background: rgba(120,140,220,.22); }
-    .modal-actions .btn-confirm { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,.35); }
-    .modal-actions .btn-confirm--info { background: linear-gradient(135deg,#4f6ef7,#3f5adf); box-shadow: 0 4px 14px rgba(63,90,223,.35); }
-    .modal-actions .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(239,68,68,.45); }
-    .modal-actions .btn-confirm--info:hover { box-shadow: 0 6px 18px rgba(63,90,223,.45); }
-
-    /* ── Mobile: content sizing ────────────────────────────── */
     @media (max-width: 768px) {
         main { padding: 18px 14px 40px; }
-        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
-        .stat-tile { padding: 12px 14px; gap: 10px; }
-        .stat-icon { width: 34px; height: 34px; font-size: .9rem; }
-        .stat-tile .value { font-size: 1.05rem; }
-        .svc-grid { gap: 14px; }
-    }
-    @media (max-width: 420px) {
-        .stats-row { grid-template-columns: 1fr 1fr; }
+        .rank-label { width: 130px; }
+        .trend-chart { height: 120px; }
     }
 </style>
 </head>
@@ -397,10 +368,10 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         </div>
     </div>
     <ul class="sidebar-nav-list">
-        <li><a href="dashboard.php" class="sidebar-link active"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
+        <li><a href="dashboard.php" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
         <li><a href="systems.php" class="sidebar-link"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
         <li><a href="launch_history.php" class="sidebar-link"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
-        <li><a href="analytics.php" class="sidebar-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+        <li><a href="analytics.php" class="sidebar-link active"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
         <li><a href="audit_log.php" class="sidebar-link"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
         <li><a href="team.php" class="sidebar-link"><i class="fas fa-users"></i><span>Team</span></a></li>
         <li><a href="security.php" class="sidebar-link"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
@@ -425,68 +396,109 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
 </div>
 
 <main class="main-content">
-    <div class="stats-row">
-    <?php foreach ($systems as $system): ?>
-        <div class="stat-tile" data-slug="<?= htmlspecialchars($system['slug']) ?>">
-            <div class="stat-icon <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
-            <div>
-                <div class="label"><?= htmlspecialchars($system['name']) ?></div>
-                <div class="value stat-loading"><span class="stat-skeleton"></span></div>
-            </div>
+    <div class="page-head">
+        <h1>Analytics</h1>
+        <div class="range-tabs">
+            <a href="?range=7" class="<?= $days === 7 ? 'active' : '' ?>">7d</a>
+            <a href="?range=30" class="<?= $days === 30 ? 'active' : '' ?>">30d</a>
+            <a href="?range=90" class="<?= $days === 90 ? 'active' : '' ?>">90d</a>
         </div>
-    <?php endforeach; ?>
     </div>
 
-    <div class="svc-grid">
-    <?php foreach ($systems as $i => $system):
-        $host = parse_url($system['base_url'], PHP_URL_HOST) ?: $system['base_url'];
-        $num = str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
-        $tag = $system['short_tag'] !== '' ? $system['short_tag'] : strtoupper($system['slug']);
-    ?>
-        <a class="svc-card svc-<?= htmlspecialchars($system['theme_color']) ?> launch-trigger" href="launch.php?system=<?= urlencode($system['slug']) ?>" data-system-name="<?= htmlspecialchars($system['name']) ?>">
-            <div class="svc-bg-num"><?= $num ?></div>
-            <div class="svc-top">
-                <div class="svc-chip"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
-                <span class="svc-tag"><?= htmlspecialchars($tag) ?></span>
+    <div class="stats-row">
+        <div class="stat-tile">
+            <div class="stat-icon"><i class="fas fa-arrow-right-to-bracket"></i></div>
+            <div>
+                <div class="label">Total launches</div>
+                <div class="value"><?= number_format($totalLaunches) ?> <span class="unit"><?= htmlspecialchars($rangeLabel) ?></span></div>
             </div>
-            <div class="svc-body">
-                <h3 class="svc-title"><?= htmlspecialchars($system['name']) ?></h3>
-                <p class="svc-desc">
-                    <span class="badge <?= $system['is_active'] ? 'active' : 'inactive' ?>"><?= $system['is_active'] ? '● Active' : '● Inactive' ?></span>
-                </p>
-                <p class="svc-url"><?= htmlspecialchars($host) ?></p>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+            <div>
+                <div class="label">Most active system</div>
+                <div class="value" style="font-size:1.1rem;"><?= $mostActive ? htmlspecialchars($mostActive['name'] ?? $mostActive['system_slug']) : '—' ?> <?= $mostActive ? '<span class="unit">' . $mostActive['c'] . ' launches</span>' : '' ?></div>
             </div>
-            <span class="svc-btn">Open Admin <i class="fas fa-arrow-right"></i></span>
-        </a>
-    <?php endforeach; ?>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+            <div>
+                <div class="label">Busiest day</div>
+                <div class="value" style="font-size:1.1rem;"><?= $busiest ? date('M j', strtotime($busiest['date'])) : '—' ?> <?= $busiest ? '<span class="unit">' . $busiest['count'] . ' launches</span>' : '' ?></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card-head">
+            <h2>Launches per day — <?= htmlspecialchars($rangeLabel) ?></h2>
+            <button type="button" class="chart-toggle-btn" id="trendToggleBtn"><i class="fas fa-table"></i> Table view</button>
+        </div>
+        <?php if ($totalLaunches === 0): ?>
+            <div class="empty-note">No launches recorded in this range.</div>
+        <?php else: ?>
+            <div class="trend-chart" id="trendChart" style="margin-bottom: 26px;">
+                <?php $labelEvery = max(1, (int) ceil($days / 6)); ?>
+                <?php foreach ($daily as $i => $d): $pct = $maxDailyCount > 0 ? round($d['count'] / $maxDailyCount * 100) : 0; ?>
+                    <div class="trend-bar-col" tabindex="0">
+                        <div class="trend-tooltip"><strong><?= $d['count'] ?></strong> on <?= date('M j, Y', strtotime($d['date'])) ?></div>
+                        <div class="trend-bar" style="height: <?= max($pct, 2) ?>%"></div>
+                        <?php if ($i === 0 || $i === count($daily) - 1 || $i % $labelEvery === 0): ?>
+                            <span class="trend-bar-label"><?= date('M j', strtotime($d['date'])) ?></span>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <table class="trend-table" id="trendTable">
+                <thead><tr><th>Date</th><th>Launches</th></tr></thead>
+                <tbody>
+                    <?php foreach (array_reverse($daily) as $d): ?>
+                        <tr><td><?= date('M j, Y', strtotime($d['date'])) ?></td><td><?= $d['count'] ?></td></tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card-head">
+            <h2>Launches by system — <?= htmlspecialchars($rangeLabel) ?></h2>
+        </div>
+        <?php if ($bySystem === []): ?>
+            <div class="empty-note">No launches recorded in this range.</div>
+        <?php else: ?>
+            <div class="rank-list">
+                <?php foreach ($bySystem as $row): $pct = $maxSystemCount > 0 ? round($row['c'] / $maxSystemCount * 100) : 0; ?>
+                    <div class="rank-row">
+                        <div class="rank-label">
+                            <span class="sys-icon-chip <?= htmlspecialchars($row['theme_color'] ?? 'blue') ?>"><i class="fas <?= htmlspecialchars($row['icon'] ?? 'fa-server') ?>"></i></span>
+                            <span><?= htmlspecialchars($row['name'] ?? $row['system_slug']) ?></span>
+                        </div>
+                        <div class="rank-track"><div class="rank-fill <?= htmlspecialchars($row['theme_color'] ?? 'blue') ?>" style="width: <?= max($pct, 3) ?>%"></div></div>
+                        <span class="rank-count"><?= $row['c'] ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 
-<!-- Launch confirmation modal -->
-<div class="modal-backdrop" id="launchModal">
-    <div class="modal-card">
-        <div class="modal-icon-wrap modal-icon-wrap--info"><i class="fas fa-arrow-up-right-from-square"></i></div>
-        <h2>Open <span id="launchSystemName">this system</span>'s admin?</h2>
-        <p class="modal-sub">You'll be signed into its admin panel using your Super Admin session. Continue?</p>
-        <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="cancelLaunch">Cancel</button>
-            <button type="button" class="btn-confirm btn-confirm--info" id="confirmLaunch">Open Admin</button>
-        </div>
-    </div>
-</div>
-
 <!-- Logout confirmation modal -->
-<div class="modal-backdrop" id="logoutModal">
-    <div class="modal-card">
-        <div class="modal-icon-wrap"><i class="fas fa-arrow-right-from-bracket"></i></div>
-        <h2>Log out of your account?</h2>
-        <p class="modal-sub">Are you sure you want to log out? You'll need to sign in again to access any connected system.</p>
-        <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="cancelLogout">Cancel</button>
-            <button type="button" class="btn-confirm" id="confirmLogout">Log out</button>
+<div class="modal-backdrop" id="logoutModal" style="position:fixed; inset:0; background:rgba(3,6,16,.55); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px;">
+    <div class="modal-card" style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:30px 26px 24px; max-width:340px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,.4); backdrop-filter:blur(22px); text-align:center; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);">
+        <div style="width:60px; height:60px; border-radius:50%; margin:0 auto 16px; background:linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.08)); border:1.5px solid rgba(239,68,68,.28); display:flex; align-items:center; justify-content:center; color:#ef4444; font-size:1.3rem;"><i class="fas fa-arrow-right-from-bracket"></i></div>
+        <h2 style="color:var(--text-primary); font-size:1.05rem; margin:0 0 8px;">Log out of your account?</h2>
+        <p style="color:var(--text-secondary); font-size:.85rem; margin:0 0 22px; line-height:1.5;">Are you sure you want to log out? You'll need to sign in again to access any connected system.</p>
+        <div style="display:flex; gap:10px;">
+            <button type="button" id="cancelLogout" style="flex:1; padding:11px 0; border-radius:10px; border:1px solid var(--card-border); font-weight:600; font-size:.85rem; cursor:pointer; font-family:inherit; background:rgba(120,140,220,.14); color:var(--text-primary);">Cancel</button>
+            <button type="button" id="confirmLogout" style="flex:1; padding:11px 0; border-radius:10px; border:none; font-weight:600; font-size:.85rem; cursor:pointer; font-family:inherit; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;">Log out</button>
         </div>
     </div>
 </div>
+<style>
+.modal-backdrop.show { display: flex !important; }
+@keyframes modalPop { from { transform: translateY(20px) scale(.94); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+</style>
 
 <script>
 // Sidebar: desktop collapse (persisted) + mobile slide-in drawer
@@ -519,12 +531,9 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     overlay.addEventListener('click', closeMobile);
 })();
 
-// Theme toggle — shares the same localStorage keys as the public site
-// (public/citizendash.php) so a preference set on either side carries over.
 (function () {
     var html = document.documentElement;
     var btn = document.getElementById('themeToggle');
-
     function apply(isDark) {
         if (isDark) { html.setAttribute('data-theme', 'dark'); } else { html.removeAttribute('data-theme'); }
         try {
@@ -532,17 +541,12 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
             localStorage.setItem('theme_backup', isDark ? 'dark' : 'light');
         } catch (e) {}
     }
-
     var saved = 'light';
     try { saved = localStorage.getItem('theme') || localStorage.getItem('theme_backup') || 'light'; } catch (e) {}
     apply(saved === 'dark');
-
-    btn.addEventListener('click', function () {
-        apply(!html.hasAttribute('data-theme'));
-    });
+    btn.addEventListener('click', function () { apply(!html.hasAttribute('data-theme')); });
 })();
 
-// Live clock — date hidden on mobile via CSS, only the time shows there
 (function () {
     var dateEl = document.getElementById('clockDate');
     var timeEl = document.getElementById('clockTime');
@@ -555,36 +559,6 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     setInterval(tick, 1000);
 })();
 
-// Fetch each system's headline stat asynchronously so a slow/unreachable
-// system's curl timeout (up to 2.5s server-side) never delays the page itself.
-(function () {
-    fetch('system_stats_ajax.php', { credentials: 'same-origin' })
-        .then(function (res) { return res.ok ? res.json() : {}; })
-        .then(function (stats) {
-            document.querySelectorAll('.stat-tile[data-slug]').forEach(function (tile) {
-                var stat = stats[tile.dataset.slug];
-                var valueEl = tile.querySelector('.value');
-                var labelEl = tile.querySelector('.label');
-                if (stat) {
-                    valueEl.textContent = stat.count;
-                    valueEl.classList.remove('stat-loading');
-                    if (stat.label) labelEl.textContent = stat.label;
-                } else {
-                    valueEl.textContent = '—';
-                    valueEl.classList.remove('stat-loading');
-                    valueEl.classList.add('stat-fallback');
-                }
-            });
-        })
-        .catch(function () {
-            document.querySelectorAll('.stat-tile .stat-skeleton').forEach(function (el) {
-                el.parentElement.textContent = '—';
-                el.parentElement.classList.add('stat-fallback');
-            });
-        });
-})();
-
-// Logout confirmation modal
 (function () {
     var modal = document.getElementById('logoutModal');
     document.getElementById('openLogoutModal').addEventListener('click', function () { modal.classList.add('show'); });
@@ -592,54 +566,37 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
 })();
 
-// Launch confirmation modal — every "Open Admin" card asks before handing
-// off into that system's admin panel via SSO.
-(function () {
-    var modal = document.getElementById('launchModal');
-    var nameEl = document.getElementById('launchSystemName');
-    var confirmBtn = document.getElementById('confirmLaunch');
-    var pendingUrl = null;
-
-    document.querySelectorAll('.launch-trigger').forEach(function (card) {
-        card.addEventListener('click', function (e) {
-            e.preventDefault();
-            pendingUrl = card.getAttribute('href');
-            nameEl.textContent = card.dataset.systemName || 'this system';
-            modal.classList.add('show');
-        });
-    });
-
-    document.getElementById('cancelLaunch').addEventListener('click', function () {
-        modal.classList.remove('show');
-        pendingUrl = null;
-    });
-    confirmBtn.addEventListener('click', function () {
-        if (pendingUrl) window.location.href = pendingUrl;
-    });
-})();
-
 <?php if (!SUPER_ADMIN_IS_LOCALHOST): ?>
-// Client-side mirror of the 2-minute server-side session timeout
-// (includes/auth.php). Purely a UX nicety — the server enforces the real
-// limit on the next request regardless of whether this fires. Disabled on
-// localhost, where the server-side timeout is also disabled for dev.
 (function () {
     var TIMEOUT_MS = 120 * 1000;
     var timer = null;
-
     function resetTimer() {
         if (timer) clearTimeout(timer);
-        timer = setTimeout(function () {
-            window.location.href = 'login.php?timeout=1';
-        }, TIMEOUT_MS);
+        timer = setTimeout(function () { window.location.href = 'login.php?timeout=1'; }, TIMEOUT_MS);
     }
-
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
         document.addEventListener(evt, resetTimer, { passive: true });
     });
     resetTimer();
 })();
 <?php endif; ?>
+
+// Trend chart <-> table toggle
+(function () {
+    var btn = document.getElementById('trendToggleBtn');
+    var chart = document.getElementById('trendChart');
+    var table = document.getElementById('trendTable');
+    if (!btn || !chart || !table) return;
+    var showingTable = false;
+    btn.addEventListener('click', function () {
+        showingTable = !showingTable;
+        chart.classList.toggle('hide', showingTable);
+        table.classList.toggle('show', showingTable);
+        btn.innerHTML = showingTable
+            ? '<i class="fas fa-chart-column"></i> Chart view'
+            : '<i class="fas fa-table"></i> Table view';
+    });
+})();
 </script>
 </body>
 </html>

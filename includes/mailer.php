@@ -66,6 +66,53 @@ function mainLguOtpEmailHtml(string $otp, string $sentAt): string
 HTML;
 }
 
+function mainLguAlertEmailHtml(string $title, string $message, string $when): string
+{
+    return <<<HTML
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#f5f5f5">
+    <div style="max-width:500px;margin:0 auto;background:#fff;border-radius:12px;padding:40px 30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)">
+        <h1 style="color:#101a3a;margin:0 0 10px 0;font-size:28px;text-align:center;">InfraGovServices</h1>
+        <h2 style="color:#4e627f;margin:0 0 30px 0;font-size:18px;font-weight:400;text-align:center;">Security alert</h2>
+        <div style="background:#fdf1f2;border-left:4px solid #d73f52;border-radius:8px;padding:22px;margin:20px 0">
+            <div style="color:#b3283f;font-size:16px;font-weight:700;margin-bottom:8px">{$title}</div>
+            <div style="color:#444;font-size:14px;line-height:1.6">{$message}</div>
+            <div style="color:#999;font-size:12px;margin-top:14px">{$when}</div>
+        </div>
+        <p style="color:#666;font-size:13px;line-height:1.6;text-align:center;">
+            If this wasn't you, sign in and change your password immediately.
+        </p>
+        <p style="color:#999;font-size:12px;margin-top:30px;border-top:1px solid #eee;padding-top:20px;text-align:center;">
+            This is an automated security notification from the Super Admin SSO Hub.
+        </p>
+    </div>
+</body></html>
+HTML;
+}
+
+function mainLguInviteEmailHtml(string $inviteUrl, string $inviterName): string
+{
+    return <<<HTML
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#f5f5f5">
+    <div style="max-width:500px;margin:0 auto;background:#fff;border-radius:12px;padding:40px 30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)">
+        <h1 style="color:#101a3a;margin:0 0 10px 0;font-size:28px;text-align:center;">InfraGovServices</h1>
+        <h2 style="color:#4e627f;margin:0 0 30px 0;font-size:18px;font-weight:400;text-align:center;">You've been invited as a Super Admin</h2>
+        <p style="color:#666;font-size:14px;line-height:1.6;text-align:center;">
+            {$inviterName} has invited you to join the Super Admin SSO Hub, with access to launch into every connected LGU system.
+        </p>
+        <div style="text-align:center;margin:30px 0">
+            <a href="{$inviteUrl}" style="display:inline-block;background:#4f6ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:16px;">Set up your account</a>
+        </div>
+        <p style="color:#666;font-size:13px;">Or copy and paste this link into your browser:</p>
+        <p style="color:#4f6ef7;font-size:12px;word-break:break-all;background:#f0f4f8;padding:12px;border-radius:6px;">{$inviteUrl}</p>
+        <p style="color:#666;font-size:14px;text-align:center;">This invite link is valid for <strong>7 days</strong>.</p>
+        <p style="color:#999;font-size:12px;margin-top:30px;border-top:1px solid #eee;padding-top:20px;text-align:center;">
+            Weren't expecting this? You can safely ignore this email.
+        </p>
+    </div>
+</body></html>
+HTML;
+}
+
 function mainLguResetEmailHtml(string $resetUrl): string
 {
     return <<<HTML

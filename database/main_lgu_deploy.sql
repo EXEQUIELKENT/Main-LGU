@@ -13,7 +13,23 @@ CREATE TABLE IF NOT EXISTS super_admins (
     failed_login_attempts INT NOT NULL DEFAULT 0,
     locked_until DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP NULL DEFAULT NULL
+    last_login TIMESTAMP NULL DEFAULT NULL,
+    totp_secret VARCHAR(32) DEFAULT NULL,
+    totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    totp_confirmed_at TIMESTAMP NULL DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    invite_token VARCHAR(64) DEFAULT NULL,
+    invite_token_expires DATETIME DEFAULT NULL,
+    invited_by INT DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS super_admin_recovery_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    super_admin_id INT NOT NULL,
+    code_hash VARCHAR(255) NOT NULL,
+    used_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS connected_systems (
@@ -28,7 +44,8 @@ CREATE TABLE IF NOT EXISTS connected_systems (
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     icon VARCHAR(50) NOT NULL DEFAULT 'fa-server',
     theme_color VARCHAR(20) NOT NULL DEFAULT 'blue',
-    short_tag VARCHAR(20) NOT NULL DEFAULT ''
+    short_tag VARCHAR(20) NOT NULL DEFAULT '',
+    secret_rotated_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sso_launch_log (
@@ -37,6 +54,18 @@ CREATE TABLE IF NOT EXISTS sso_launch_log (
     system_slug VARCHAR(30) NOT NULL,
     launched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ip_address VARCHAR(45) DEFAULT NULL,
+    FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS system_audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    super_admin_id INT NOT NULL,
+    action VARCHAR(30) NOT NULL,
+    system_slug VARCHAR(30) NOT NULL,
+    system_name VARCHAR(100) NOT NULL,
+    details VARCHAR(255) DEFAULT NULL,
+    ip_address VARCHAR(45) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
