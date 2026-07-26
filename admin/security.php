@@ -326,7 +326,7 @@ if ($admin['totp_enabled']) {
         .theme-thumb .fa-moon { color: #93c5fd; }
     }
 
-    main { max-width: 900px; margin: 0 auto; padding: 34px 40px 60px; position: relative; z-index: 1; }
+    main { max-width: 1600px; margin: 0 auto; padding: 34px 40px 60px; position: relative; z-index: 1; }
 
     .page-head { margin-bottom: 20px; }
     .page-head h1 { font-size: 1.15rem; color: var(--text-primary); margin: 0 0 4px; }
@@ -334,7 +334,7 @@ if ($admin['totp_enabled']) {
 
     .sec-card {
         background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
-        backdrop-filter: blur(14px); padding: 24px; margin-bottom: 20px;
+        backdrop-filter: blur(14px); padding: 24px; margin-bottom: 20px; max-width: 720px;
     }
     .sec-card-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
     .sec-icon-wrap {
