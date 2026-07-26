@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $icon = array_key_exists($_POST['icon'] ?? '', SYSTEM_ICON_CHOICES) ? $_POST['icon'] : 'fa-server';
         $themeColor = in_array($_POST['theme_color'] ?? '', SYSTEM_THEME_COLORS, true) ? $_POST['theme_color'] : 'blue';
         $shortTag = trim($_POST['short_tag'] ?? '');
+        $publicTagline = trim($_POST['public_tagline'] ?? '');
         $isActive = isset($_POST['is_active']) ? 1 : 0;
 
         if ($name === '' || $baseUrl === '' || $ssoConsumePath === '') {
@@ -64,8 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $secret = bin2hex(random_bytes(32));
                 try {
                     mainLguDb()->prepare(
-                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag, secret_rotated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())'
-                    )->execute([$slug, $name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $secret, $isActive, $icon, $themeColor, $shortTag]);
+                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag, public_tagline, secret_rotated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW())'
+                    )->execute([$slug, $name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $secret, $isActive, $icon, $themeColor, $shortTag, $publicTagline ?: null]);
                     logSystemAudit('create', $slug, $name);
                     sendSecurityAlert(
                         'New connected system added',
@@ -84,11 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $old = $oldStmt->fetch();
 
             mainLguDb()->prepare(
-                'UPDATE connected_systems SET name=?, base_url=?, admin_entry_path=?, sso_consume_path=?, stats_path=?, icon=?, theme_color=?, short_tag=?, is_active=? WHERE id=?'
-            )->execute([$name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $icon, $themeColor, $shortTag, $isActive, $id]);
+                'UPDATE connected_systems SET name=?, base_url=?, admin_entry_path=?, sso_consume_path=?, stats_path=?, icon=?, theme_color=?, short_tag=?, public_tagline=?, is_active=? WHERE id=?'
+            )->execute([$name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $icon, $themeColor, $shortTag, $publicTagline ?: null, $isActive, $id]);
 
             if ($old) {
-                $new = ['name' => $name, 'base_url' => $baseUrl, 'admin_entry_path' => $adminEntryPath, 'sso_consume_path' => $ssoConsumePath, 'stats_path' => $statsPath ?: null, 'icon' => $icon, 'theme_color' => $themeColor, 'short_tag' => $shortTag, 'is_active' => $isActive];
+                $new = ['name' => $name, 'base_url' => $baseUrl, 'admin_entry_path' => $adminEntryPath, 'sso_consume_path' => $ssoConsumePath, 'stats_path' => $statsPath ?: null, 'icon' => $icon, 'theme_color' => $themeColor, 'short_tag' => $shortTag, 'public_tagline' => $publicTagline ?: null, 'is_active' => $isActive];
                 logSystemAudit('update', $old['slug'], $name, summarizeSystemChanges($old, $new));
             }
             setNotification('success', 'System updated.');
@@ -408,6 +409,7 @@ unset($_SESSION['reveal_secret']);
     .sys-icon-chip.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .sys-icon-chip.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
     .sys-icon-chip.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
+    .sys-icon-chip.green  { background: linear-gradient(135deg,#10b981,#065f38); }
     .sys-slug { color: var(--text-secondary); font-size: .74rem; font-family: 'DM Mono', monospace; }
     .sys-url { color: var(--text-secondary); font-size: .78rem; word-break: break-all; }
     .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -744,6 +746,7 @@ unset($_SESSION['reveal_secret']);
                                 data-icon="<?= htmlspecialchars($system['icon']) ?>"
                                 data-theme-color="<?= htmlspecialchars($system['theme_color']) ?>"
                                 data-short-tag="<?= htmlspecialchars($system['short_tag']) ?>"
+                                data-public-tagline="<?= htmlspecialchars((string) $system['public_tagline']) ?>"
                                 data-is-active="<?= (int) $system['is_active'] ?>"
                             ><i class="fas fa-pen"></i></button>
 
@@ -802,6 +805,7 @@ unset($_SESSION['reveal_secret']);
                         data-icon="<?= htmlspecialchars($system['icon']) ?>"
                         data-theme-color="<?= htmlspecialchars($system['theme_color']) ?>"
                         data-short-tag="<?= htmlspecialchars($system['short_tag']) ?>"
+                        data-public-tagline="<?= htmlspecialchars((string) $system['public_tagline']) ?>"
                         data-is-active="<?= (int) $system['is_active'] ?>"
                     ><i class="fas fa-pen"></i> Edit</button>
 
@@ -924,6 +928,10 @@ unset($_SESSION['reveal_secret']);
                     <div class="form-field full">
                         <label for="formShortTag">Badge text</label>
                         <input type="text" name="short_tag" id="formShortTag" placeholder="e.g. RGMAP" maxlength="20">
+                    </div>
+                    <div class="form-field full">
+                        <label for="formPublicTagline">Public tagline (shown on the citizen dashboard card)</label>
+                        <input type="text" name="public_tagline" id="formPublicTagline" placeholder="e.g. Handling water, electricity, and waste disposal accounts and payments." maxlength="255">
                     </div>
                 </div>
                 <label class="form-checkbox"><input type="checkbox" name="is_active" id="formIsActive" checked> Active (visible on the dashboard)</label>
@@ -1245,6 +1253,7 @@ setTimeout(closeNotif, 4500);
         window.iconCombo.setValue(d.icon);
         window.colorCombo.setValue(d.themeColor);
         document.getElementById('formShortTag').value = d.shortTag;
+        document.getElementById('formPublicTagline').value = d.publicTagline || '';
         document.getElementById('formIsActive').checked = d.isActive === '1';
         slugField.style.display = 'none';
         modal.classList.add('show');

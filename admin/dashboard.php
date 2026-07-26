@@ -248,6 +248,7 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     .stat-icon.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .stat-icon.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
     .stat-icon.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
+    .stat-icon.green  { background: linear-gradient(135deg,#10b981,#065f38); }
     .stat-tile .stat-fallback { color: var(--text-secondary); font-size: .95rem; font-weight: 500; }
     .stat-tile .label { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .stat-tile .value { font-family: 'DM Mono', monospace; font-size: 1.4rem; color: var(--text-primary); font-weight: 500; }
@@ -281,6 +282,7 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     .svc-rose   { background: linear-gradient(145deg, #3a0020 0%, #8b0045 55%, #c8185a 100%); }
     .svc-teal   { background: linear-gradient(145deg, #003030 0%, #0a5f5f 55%, #0d9e9e 100%); }
     .svc-amber  { background: linear-gradient(145deg, #3d2000 0%, #a05a00 50%, #d4920a 100%); }
+    .svc-green  { background: linear-gradient(145deg, #042918 0%, #065f38 55%, #0f9e5e 100%); }
 
     .svc-blue:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(30,86,200,.5); border-color: rgba(59,130,246,.5); }
     .svc-orange:hover { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(200,75,16,.5); border-color: rgba(251,146,60,.5); }
@@ -288,6 +290,7 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
     .svc-rose:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(200,24,90,.5); border-color: rgba(251,113,133,.5); }
     .svc-teal:hover   { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(13,158,158,.5); border-color: rgba(45,212,191,.5); }
     .svc-amber:hover  { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(212,146,10,.5); border-color: rgba(212,146,10,.5); }
+    .svc-green:hover  { transform: translateY(-10px) scale(1.02); box-shadow: 0 24px 60px rgba(15,158,94,.55); border-color: rgba(16,185,129,.5); }
 
     .svc-bg-num {
         position: absolute; bottom: -12px; right: 14px; font-size: 6.5rem; font-weight: 900;

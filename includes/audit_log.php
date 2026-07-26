@@ -35,6 +35,7 @@ function summarizeSystemChanges(array $old, array $new): ?string
         'icon' => 'icon',
         'theme_color' => 'card color',
         'short_tag' => 'badge text',
+        'public_tagline' => 'public tagline',
         'is_active' => 'active status',
     ];
 

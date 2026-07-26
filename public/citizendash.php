@@ -1,8 +1,20 @@
 <?php
 require_once __DIR__ . '/../includes/auth_gate.php';
+require_once __DIR__ . '/../includes/db.php';
 
 date_default_timezone_set('Asia/Manila');
 $serverTimestamp = time();
+
+// Department pills, ticker, and cards below are all driven from this same
+// table the Super Admin manages under Connected Systems — no more hand-
+// maintained HTML that drifts out of sync with what's actually configured.
+$connectedSystems = mainLguDb()->query('SELECT * FROM connected_systems WHERE is_active = 1 ORDER BY id')->fetchAll();
+
+$activeDepartmentsCount = count($connectedSystems);
+
+$ssoLaunchesThisMonth = (int) mainLguDb()->query(
+    "SELECT COUNT(*) FROM sso_launch_log WHERE launched_at >= DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')"
+)->fetchColumn();
 
 if ($_SERVER['HTTP_HOST'] === 'localhost') {
     $BASE_URL      = '/Main LGU/public/';
@@ -253,29 +265,13 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
             <p class="db-hero-sub" data-i18n="hero_tagline">Your unified gateway to all Quezon City infrastructure and utilities departments — transparent, accessible, and built for every resident.</p>
 
-            <!-- Department category pills -->
+            <!-- Department category pills — driven live from Connected Systems -->
             <div class="db-hero-pills">
-                <a href="https://ipms.infragovservices.com/" class="db-pill active" target="_blank" rel="noopener">
-                    <span data-i18n="pill_ipms">Infrastructure</span> <span class="db-pill-count">IPMS</span>
-                </a>
-                <a href="https://UMAN.infraservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span data-i18n="pill_uman">Utilities</span> <span class="db-pill-count">UMAN</span>
-                </a>
-                <a href="https://cprf.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span data-i18n="pill_cprf">Facilities</span> <span class="db-pill-count">CPRF</span>
-                </a>
-                <a href="https://cimm.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span data-i18n="pill_cimm">Maintenance</span> <span class="db-pill-count">CIMM</span>
-                </a>
-                <a href="https://energy.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span data-i18n="pill_energy">Energy</span> <span class="db-pill-count">ECM</span>
-                </a>
-                <a href="https://rtm.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span data-i18n="pill_rtm">Roads</span> <span class="db-pill-count">RTM</span>
-                </a>
-                <a href="https://UPaD.infragovservices.com/" class="db-pill" target="_blank" rel="noopener">
-                    <span>Urban Planning</span> <span class="db-pill-count">UPaD</span>
-                </a>
+                <?php foreach ($connectedSystems as $i => $sys): ?>
+                    <a href="<?= htmlspecialchars($sys['base_url']) ?>" class="db-pill<?= $i === 0 ? ' active' : '' ?>" target="_blank" rel="noopener">
+                        <span><?= htmlspecialchars($sys['name']) ?></span> <span class="db-pill-count"><?= htmlspecialchars($sys['short_tag']) ?></span>
+                    </a>
+                <?php endforeach; ?>
             </div>
 
             <div class="db-hero-cta">
@@ -296,118 +292,59 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <div class="db-ticker-fade db-ticker-fade--right"></div>
 
             <div class="db-ticker-track">
-                <!-- Set 1 -->
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--blue"><i class="fas fa-hard-hat"></i></span>
-                    <span>Infrastructure Project Management</span>
-                    <span class="db-ticker-code">(IPMS)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--teal"><i class="fas fa-bolt"></i></span>
-                    <span>Utilities Billing &amp; Management</span>
-                    <span class="db-ticker-code">(UMAN)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-road"></i></span>
-                    <span>Road &amp; Transportation</span>
-                    <span class="db-ticker-code">(RTM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--purple"><i class="fas fa-landmark"></i></span>
-                    <span>Public Facilities Reservation</span>
-                    <span class="db-ticker-code">(CPRF)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--green"><i class="fas fa-tools"></i></span>
-                    <span>Community Infrastructure Maintenance</span>
-                    <span class="db-ticker-code">(CIMM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--coral"><i class="fas fa-leaf"></i></span>
-                    <span>Energy Efficiency &amp; Conservation</span>
-                    <span class="db-ticker-code">(ECM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-map"></i></span>
-                    <span>Urban Planning and Development</span>
-                    <span class="db-ticker-code">(UPaD)</span>
-                </div>
-                <!-- Set 2 (duplicate for seamless loop) -->
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--blue"><i class="fas fa-hard-hat"></i></span>
-                    <span>Infrastructure Project Management</span>
-                    <span class="db-ticker-code">(IPMS)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--teal"><i class="fas fa-bolt"></i></span>
-                    <span>Utilities Billing &amp; Management</span>
-                    <span class="db-ticker-code">(UMAN)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-road"></i></span>
-                    <span>Road &amp; Transportation</span>
-                    <span class="db-ticker-code">(RTM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--purple"><i class="fas fa-landmark"></i></span>
-                    <span>Public Facilities Reservation</span>
-                    <span class="db-ticker-code">(CPRF)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--green"><i class="fas fa-tools"></i></span>
-                    <span>Community Infrastructure Maintenance</span>
-                    <span class="db-ticker-code">(CIMM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--coral"><i class="fas fa-leaf"></i></span>
-                    <span>Energy Efficiency &amp; Conservation</span>
-                    <span class="db-ticker-code">(ECM)</span>
-                </div>
-                <div class="db-ticker-item">
-                    <span class="db-ticker-badge db-ticker-badge--amber"><i class="fas fa-map"></i></span>
-                    <span>Urban Planning and Development</span>
-                    <span class="db-ticker-code">(UPaD)</span>
-                </div>
+                <?php
+                // Rendered twice back-to-back so the CSS scroll animation
+                // loops seamlessly — same live list both times.
+                for ($rep = 0; $rep < 2; $rep++):
+                    foreach ($connectedSystems as $sys): ?>
+                        <div class="db-ticker-item">
+                            <span class="db-ticker-badge db-ticker-badge--<?= htmlspecialchars($sys['theme_color']) ?>"><i class="fas <?= htmlspecialchars($sys['icon']) ?>"></i></span>
+                            <span><?= htmlspecialchars($sys['name']) ?></span>
+                            <span class="db-ticker-code">(<?= htmlspecialchars($sys['short_tag']) ?>)</span>
+                        </div>
+                <?php endforeach;
+                endfor; ?>
             </div>
         </div>
     </section>
 
-    <!-- ── STATS BAR — redesigned metrics ───────────── -->
+    <!-- ── STATS BAR — every number here is live from the database,
+         nothing hardcoded ───────────── -->
     <section class="db-metrics-section dash-aos" id="dashTrust">
         <div class="db-metrics-inner">
             <div class="db-metric-card dash-aos dash-delay-1">
                 <div class="db-metric-icon"><i class="fas fa-building"></i></div>
                 <div class="db-metric-body">
-                    <div class="db-metric-num">7</div>
-                    <div class="db-metric-label" data-i18n="stat_depts">Active Departments</div>
-                    <div class="db-metric-sub" data-i18n="stat_depts_sub">City-wide infrastructure coverage</div>
+                    <div class="db-metric-num"><?= $activeDepartmentsCount ?></div>
+                    <div class="db-metric-label">Active Departments</div>
+                    <div class="db-metric-sub">Connected systems, live from the admin</div>
                 </div>
                 <div class="db-metric-ring"></div>
             </div>
             <div class="db-metric-card dash-aos dash-delay-2">
-                <div class="db-metric-icon" style="background:linear-gradient(135deg,#065f46,#10b981)"><i class="fas fa-users"></i></div>
+                <div class="db-metric-icon" style="background:linear-gradient(135deg,#065f46,#10b981)"><i class="fas fa-chart-line"></i></div>
                 <div class="db-metric-body">
-                    <div class="db-metric-num">3M+</div>
-                    <div class="db-metric-label" data-i18n="stat_residents">Residents Served</div>
-                    <div class="db-metric-sub" data-i18n="stat_residents_sub">Quezon City population</div>
+                    <div class="db-metric-num" id="statActivityNum"><span class="db-metric-skeleton"></span></div>
+                    <div class="db-metric-label" id="statActivityLabel">Citywide Activity</div>
+                    <div class="db-metric-sub">Combined activity across all systems</div>
                 </div>
                 <div class="db-metric-ring" style="border-color:rgba(16,185,129,.25)"></div>
             </div>
             <div class="db-metric-card dash-aos dash-delay-3">
-                <div class="db-metric-icon" style="background:linear-gradient(135deg,#78350f,#f59e0b)"><i class="fas fa-check-double"></i></div>
+                <div class="db-metric-icon" style="background:linear-gradient(135deg,#78350f,#f59e0b)"><i class="fas fa-arrow-right-to-bracket"></i></div>
                 <div class="db-metric-body">
-                    <div class="db-metric-num">500+</div>
-                    <div class="db-metric-label" data-i18n="stat_projects">Projects Completed</div>
-                    <div class="db-metric-sub" data-i18n="stat_projects_sub">Public infrastructure works</div>
+                    <div class="db-metric-num"><?= number_format($ssoLaunchesThisMonth) ?></div>
+                    <div class="db-metric-label">SSO Launches</div>
+                    <div class="db-metric-sub">Admin logins this month</div>
                 </div>
                 <div class="db-metric-ring" style="border-color:rgba(245,158,11,.25)"></div>
             </div>
             <div class="db-metric-card dash-aos dash-delay-4">
-                <div class="db-metric-icon" style="background:linear-gradient(135deg,#4c1d95,#8b5cf6)"><i class="fas fa-clock"></i></div>
+                <div class="db-metric-icon" style="background:linear-gradient(135deg,#4c1d95,#8b5cf6)"><i class="fas fa-file-lines"></i></div>
                 <div class="db-metric-body">
-                    <div class="db-metric-num">24/7</div>
-                    <div class="db-metric-label" data-i18n="stat_access">Online Access</div>
-                    <div class="db-metric-sub" data-i18n="stat_access_sub">Anytime, anywhere</div>
+                    <div class="db-metric-num" id="statReportsNum"><span class="db-metric-skeleton"></span></div>
+                    <div class="db-metric-label" id="statReportsLabel">Reports</div>
+                    <div class="db-metric-sub">Filed through Road Monitoring</div>
                 </div>
                 <div class="db-metric-ring" style="border-color:rgba(139,92,246,.25)"></div>
             </div>
@@ -503,149 +440,31 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <p  class="db-svc-v3-sub"   data-i18n="services_subtitle">Select a department below to access its dedicated portal and services</p>
         </div>
 
-        <!-- Card grid -->
+        <!-- Card grid — driven live from Connected Systems -->
         <div class="db-svc-v3-grid">
-
-            <!-- Card 1 — blue -->
-            <div class="db-svc3-card db-svc3-blue dash-aos dash-delay-1" id="dashSvcCard1">
-                <div class="db-svc3-bg-num">01</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-hard-hat"></i></div>
-                    <span class="db-svc3-tag">IPMS</span>
+            <?php foreach ($connectedSystems as $i => $sys):
+                $num = str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
+                $delay = ($i % 6) + 1;
+            ?>
+                <div class="db-svc3-card db-svc3-<?= htmlspecialchars($sys['theme_color']) ?> dash-aos dash-delay-<?= $delay ?>" id="dashSvcCard<?= $i + 1 ?>">
+                    <div class="db-svc3-bg-num"><?= $num ?></div>
+                    <div class="db-svc3-orb"></div>
+                    <div class="db-svc3-top">
+                        <div class="db-svc3-chip"><i class="fas <?= htmlspecialchars($sys['icon']) ?>"></i></div>
+                        <span class="db-svc3-tag"><?= htmlspecialchars($sys['short_tag']) ?></span>
+                    </div>
+                    <div class="db-svc3-body">
+                        <h3 class="db-svc3-title"><?= htmlspecialchars($sys['name']) ?></h3>
+                        <p class="db-svc3-desc"><?= htmlspecialchars($sys['public_tagline'] ?? '') ?></p>
+                    </div>
+                    <a class="db-svc3-btn" href="<?= htmlspecialchars($sys['base_url']) ?>" target="_blank" rel="noopener noreferrer">
+                        <span data-i18n="svc_visit">Visit Department</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <div class="db-svc3-shimmer"></div>
+                    <div class="db-svc3-border-anim"></div>
                 </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc1_title">Infrastructure Project Management</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc1_desc">Planning and oversight of city-wide construction and development projects.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://ipms.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 2 — green -->
-            <div class="db-svc3-card db-svc3-green dash-aos dash-delay-2" id="dashSvcCard2">
-                <div class="db-svc3-bg-num">02</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <span class="db-svc3-tag">UMAN</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc2_title">Utilities Billing and Management</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc2_desc">Handling water, electricity, and waste disposal accounts and payments.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://UMAN.infraservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 3 — orange -->
-            <div class="db-svc3-card db-svc3-orange dash-aos dash-delay-3" id="dashSvcCard3">
-                <div class="db-svc3-bg-num">03</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-road"></i></div>
-                    <span class="db-svc3-tag">RTM</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc3_title">Road &amp; Transportation Management</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc3_desc">Overseeing road construction, maintenance, and city transportation networks.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://rtm.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 4 — purple -->
-            <div class="db-svc3-card db-svc3-purple dash-aos dash-delay-4" id="dashSvcCard4">
-                <div class="db-svc3-bg-num">04</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-calendar-check"></i></div>
-                    <span class="db-svc3-tag">CPRF</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc4_title">Public Facilities Reservation</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc4_desc">Book community centers, parks, and sports fields for public use.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://cprf.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 5 — rose -->
-            <div class="db-svc3-card db-svc3-rose dash-aos dash-delay-5" id="dashSvcCard5">
-                <div class="db-svc3-bg-num">05</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-tools"></i></div>
-                    <span class="db-svc3-tag">CIMM</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc5_title">Community Infrastructure Maintenance</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc5_desc">Coordinating repairs and upkeep for public assets and safety systems.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://cimm.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 6 — teal -->
-            <div class="db-svc3-card db-svc3-teal dash-aos dash-delay-6" id="dashSvcCard6">
-                <div class="db-svc3-bg-num">06</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-leaf"></i></div>
-                    <span class="db-svc3-tag">ECM</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title" data-i18n="svc6_title">Energy Efficiency &amp; Conservation</h3>
-                    <p  class="db-svc3-desc"  data-i18n="svc6_desc">Implementing sustainable energy practices and city-wide conservation programs.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://energy.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
-            <!-- Card 7 — amber -->
-            <div class="db-svc3-card db-svc3-amber dash-aos dash-delay-1" id="dashSvcCard7" style="background: linear-gradient(145deg, #3d2000 0%, #a05a00 50%, #d4920a 100%) !important;">
-                <div class="db-svc3-bg-num">07</div>
-                <div class="db-svc3-orb"></div>
-                <div class="db-svc3-top">
-                    <div class="db-svc3-chip"><i class="fas fa-map"></i></div>
-                    <span class="db-svc3-tag">UPaD</span>
-                </div>
-                <div class="db-svc3-body">
-                    <h3 class="db-svc3-title">Urban Planning and Development</h3>
-                    <p  class="db-svc3-desc">Zoning, architectural reviews, and long-term city growth strategies.</p>
-                </div>
-                <a class="db-svc3-btn" href="https://UPaD.infragovservices.com/" target="_blank" rel="noopener noreferrer">
-                    <span data-i18n="svc_visit">Visit Department</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <div class="db-svc3-shimmer"></div>
-                <div class="db-svc3-border-anim"></div>
-            </div>
-
+            <?php endforeach; ?>
         </div>
     </section>
 
@@ -860,6 +679,37 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 
 <!-- Main scripts: Creative theme base + all citizendash features -->
 <script src="<?= $BASE_URL ?>scripts.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $BASE_URL . 'scripts.js') ?>"></script>
+
+<!-- Fetch the two cross-system stats asynchronously so a slow connected
+     system never delays this page from rendering -->
+<script>
+(function () {
+    fetch('<?= $BASE_URL ?>community_stats_ajax.php', { credentials: 'same-origin' })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+            var activityNum = document.getElementById('statActivityNum');
+            if (activityNum) {
+                activityNum.textContent = data ? new Intl.NumberFormat('en-US').format(data.total) : '—';
+            }
+            var reportsNum = document.getElementById('statReportsNum');
+            var reportsLabel = document.getElementById('statReportsLabel');
+            if (reportsNum) {
+                if (data && data.reports) {
+                    reportsNum.textContent = new Intl.NumberFormat('en-US').format(data.reports.count);
+                    if (reportsLabel && data.reports.label) reportsLabel.textContent = data.reports.label;
+                } else {
+                    reportsNum.textContent = '—';
+                }
+            }
+        })
+        .catch(function () {
+            ['statActivityNum', 'statReportsNum'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = '—';
+            });
+        });
+})();
+</script>
 
 </body>
 </html>

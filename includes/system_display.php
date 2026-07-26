@@ -5,7 +5,7 @@
  * management page, so both stay visually and structurally in sync.
  */
 
-const SYSTEM_THEME_COLORS = ['blue', 'orange', 'purple', 'rose', 'teal', 'amber'];
+const SYSTEM_THEME_COLORS = ['blue', 'orange', 'purple', 'rose', 'teal', 'amber', 'green'];
 
 const SYSTEM_ICON_CHOICES = [
     'fa-server' => 'Server (generic)',
@@ -36,6 +36,7 @@ function systemThemeGradientHex(string $themeColor): array
         'rose' => ['#fb7185', '#c8185a'],
         'teal' => ['#14b8a6', '#0f766e'],
         'amber' => ['#d4920a', '#a05a00'],
+        'green' => ['#10b981', '#065f38'],
     ];
 
     return $map[$themeColor] ?? $map['blue'];

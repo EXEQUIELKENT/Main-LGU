@@ -334,6 +334,7 @@ $rangeLabel = "last {$days} days";
     .sys-icon-chip.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .sys-icon-chip.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
     .sys-icon-chip.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
+    .sys-icon-chip.green  { background: linear-gradient(135deg,#10b981,#065f38); }
     .rank-track { flex: 1; height: 20px; background: rgba(120,140,220,.1); border-radius: 6px; overflow: hidden; }
     .rank-fill { height: 100%; border-radius: 6px; min-width: 6px; }
     .rank-fill.blue   { background: linear-gradient(90deg,#3b82f6,#1d4ed8); }
@@ -342,6 +343,7 @@ $rangeLabel = "last {$days} days";
     .rank-fill.rose   { background: linear-gradient(90deg,#fb7185,#c8185a); }
     .rank-fill.teal   { background: linear-gradient(90deg,#14b8a6,#0f766e); }
     .rank-fill.amber  { background: linear-gradient(90deg,#d4920a,#a05a00); }
+    .rank-fill.green  { background: linear-gradient(90deg,#10b981,#065f38); }
     .rank-count { font-family: 'DM Mono', monospace; font-size: .82rem; color: var(--text-primary); width: 34px; text-align: right; flex-shrink: 0; }
 
     .empty-note { text-align: center; color: var(--text-secondary); padding: 30px; font-size: .85rem; }

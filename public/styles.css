@@ -11501,10 +11501,12 @@ body.dash-page::-webkit-scrollbar-thumb { background:var(--db-blue);border-radiu
 
 .db-ticker-badge--blue   { background: rgba(37,99,235,.30);  color: #93c5fd; border: 1px solid rgba(37,99,235,.35); }
 .db-ticker-badge--teal   { background: rgba(13,148,136,.28); color: #5eead4; border: 1px solid rgba(13,148,136,.35); }
-.db-ticker-badge--amber  { background: rgba(217,119,6,.28);  color: #fcd34d; border: 1px solid rgba(217,119,6,.35);  }
+.db-ticker-badge--amber  { background: rgba(212,146,10,.28); color: #fcd34d; border: 1px solid rgba(212,146,10,.35); }
 .db-ticker-badge--purple { background: rgba(124,58,237,.28); color: #c4b5fd; border: 1px solid rgba(124,58,237,.35); }
 .db-ticker-badge--green  { background: rgba(22,163,74,.28);  color: #86efac; border: 1px solid rgba(22,163,74,.35);  }
 .db-ticker-badge--coral  { background: rgba(225,29,72,.25);  color: #fda4af; border: 1px solid rgba(225,29,72,.30);  }
+.db-ticker-badge--orange { background: rgba(245,158,11,.28); color: #fdba74; border: 1px solid rgba(245,158,11,.35); }
+.db-ticker-badge--rose   { background: rgba(200,24,90,.28);  color: #fda4af; border: 1px solid rgba(200,24,90,.35);  }
 
 /* Light-mode overrides for ticker */
 html:not([data-theme="dark"]) .db-ticker-bar {
@@ -12223,6 +12225,17 @@ body.dash-guide-active .dash-aos { transition-duration:0s!important;transition-d
 .db-metric-card:hover .db-metric-icon { transform: scale(1.1) rotate(-5deg) }
 
 .db-metric-body { flex: 1; min-width: 0 }
+
+.db-metric-skeleton {
+    display: inline-block; width: 64px; height: 2rem; border-radius: 8px; vertical-align: middle;
+    background: linear-gradient(90deg, rgba(255,255,255,.08) 25%, rgba(255,255,255,.18) 37%, rgba(255,255,255,.08) 63%);
+    background-size: 400% 100%; animation: dbMetricSkeletonPulse 1.4s ease infinite;
+}
+@keyframes dbMetricSkeletonPulse { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+html:not([data-theme="dark"]) .db-metric-skeleton {
+    background: linear-gradient(90deg, rgba(15,23,60,.08) 25%, rgba(15,23,60,.18) 37%, rgba(15,23,60,.08) 63%);
+    background-size: 400% 100%;
+}
 
 .db-metric-num {
     font-size: clamp(2rem, 3.5vw, 3rem);

@@ -392,6 +392,7 @@ function buildQuery(array $overrides): string
     .sys-icon-chip.rose   { background: linear-gradient(135deg,#fb7185,#c8185a); }
     .sys-icon-chip.teal   { background: linear-gradient(135deg,#14b8a6,#0f766e); }
     .sys-icon-chip.amber  { background: linear-gradient(135deg,#d4920a,#a05a00); }
+    .sys-icon-chip.green  { background: linear-gradient(135deg,#10b981,#065f38); }
     .ip-cell { font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--text-secondary); }
     .time-cell { font-family: 'DM Mono', monospace; font-size: .78rem; white-space: nowrap; }
     .details-cell { color: var(--text-secondary); font-size: .8rem; }
