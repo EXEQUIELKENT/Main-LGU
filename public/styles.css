@@ -11347,6 +11347,7 @@ body.dash-page::-webkit-scrollbar-thumb { background:var(--db-blue);border-radiu
 }
 
 .db-pill {
+    position:relative;
     display:inline-flex;align-items:center;gap:8px;
     padding:8px 20px;border-radius:50px;
     font-size:.8rem;font-weight:600;
@@ -11374,6 +11375,27 @@ body.dash-page::-webkit-scrollbar-thumb { background:var(--db-blue);border-radiu
     line-height:1;
 }
 .db-pill.active .db-pill-count { background:rgba(10,22,40,.15);color:#0a1628 }
+
+/* Short description tooltip, revealed on hover — pills stay single-line */
+.db-pill-tip {
+    position:absolute; bottom:calc(100% + 10px); left:50%;
+    transform:translateX(-50%) translateY(4px);
+    background:#0a1628; color:#e5edff;
+    padding:9px 13px; border-radius:9px;
+    font-size:.72rem; font-weight:500; line-height:1.4;
+    white-space:normal; width:max-content; max-width:220px; text-align:center;
+    opacity:0; pointer-events:none; z-index:50;
+    transition:opacity .15s ease, transform .15s ease;
+    box-shadow:0 10px 26px rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);
+}
+.db-pill-tip::after {
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:6px solid transparent; border-top-color:#0a1628;
+}
+.db-pill:hover .db-pill-tip, .db-pill:focus-visible .db-pill-tip {
+    opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;
+}
 
 /* CTA buttons */
 .db-hero-cta {

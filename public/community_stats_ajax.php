@@ -34,7 +34,7 @@ foreach ($stats as $stat) {
 
 $result = [
     'total' => $total,
-    'reports' => $stats['roadmon'] ?? null,
+    'reports' => $stats['cimm'] ?? null,
 ];
 
 $json = json_encode($result);

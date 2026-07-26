@@ -270,6 +270,9 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                 <?php foreach ($connectedSystems as $i => $sys): ?>
                     <a href="<?= htmlspecialchars($sys['base_url']) ?>" class="db-pill<?= $i === 0 ? ' active' : '' ?>" target="_blank" rel="noopener">
                         <span><?= htmlspecialchars($sys['name']) ?></span> <span class="db-pill-count"><?= htmlspecialchars($sys['short_tag']) ?></span>
+                        <?php if (!empty($sys['public_tagline'])): ?>
+                            <span class="db-pill-tip"><?= htmlspecialchars($sys['public_tagline']) ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -344,7 +347,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
                 <div class="db-metric-body">
                     <div class="db-metric-num" id="statReportsNum"><span class="db-metric-skeleton"></span></div>
                     <div class="db-metric-label" id="statReportsLabel">Reports</div>
-                    <div class="db-metric-sub">Filed through Road Monitoring</div>
+                    <div class="db-metric-sub">Filed through CIMM</div>
                 </div>
                 <div class="db-metric-ring" style="border-color:rgba(139,92,246,.25)"></div>
             </div>
