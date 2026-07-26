@@ -435,10 +435,20 @@ unset($_SESSION['reveal_secret']);
     .secret-age--stale { color: #b3283f; }
     [data-theme="dark"] .secret-age--stale { color: #ff96a5; }
     .secret-age--unknown { color: var(--text-secondary); }
-    .bulk-checkbox {
-        width: 17px; height: 17px; accent-color: #4f6ef7; cursor: pointer; flex-shrink: 0;
+    .bulk-check { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; }
+    .bulk-checkbox { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .bulk-check-box {
+        width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
+        border: 1.5px solid var(--input-border); background: var(--input-bg);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 10px; color: transparent; transition: background .15s, border-color .15s, color .15s;
     }
-    .sys-card-header .bulk-checkbox { margin-right: 2px; }
+    .bulk-check:hover .bulk-check-box { border-color: #4f6ef7; }
+    .bulk-checkbox:checked ~ .bulk-check-box {
+        background: linear-gradient(135deg,#4f6ef7,#3f5adf); border-color: #3f5adf; color: #fff;
+    }
+    .bulk-checkbox:focus-visible ~ .bulk-check-box { outline: 2px solid rgba(79,110,247,.4); outline-offset: 2px; }
+    .sys-card-header .bulk-check { margin-right: 2px; }
 
     .bulk-bar {
         position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120%);
@@ -564,6 +574,43 @@ unset($_SESSION['reveal_secret']);
     .form-checkbox { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--text-primary); margin-bottom: 18px; }
     .form-checkbox input { width: auto; }
 
+    /* ── Icon / color comboboxes (CIMM-style searchable dropdown, fixed-
+       positioned via JS so they escape the form modal's scrollable body) ── */
+    .combobox { position: relative; width: 100%; }
+    .combobox-display {
+        display: flex; align-items: center; gap: 8px;
+        padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--input-border);
+        background: var(--input-bg); color: var(--text-primary); cursor: pointer;
+        font-size: .86rem; min-height: 40px; transition: border-color .2s, box-shadow .2s;
+    }
+    .combobox-display span:nth-child(2) { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .combobox-display.open { border-color: #4f6ef7; box-shadow: 0 0 0 3px rgba(79,110,247,.15); }
+    .combobox-arrow { color: var(--text-secondary); font-size: .68rem; transition: transform .2s; flex-shrink: 0; }
+    .combobox-display.open .combobox-arrow { transform: rotate(180deg); }
+    .combo-icon-preview {
+        width: 24px; height: 24px; border-radius: 7px; background: rgba(79,110,247,.12); color: #4f6ef7;
+        display: flex; align-items: center; justify-content: center; font-size: .72rem; flex-shrink: 0;
+    }
+    .combo-color-swatch { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+
+    .combobox-dropdown {
+        position: fixed; z-index: 10050; display: none; visibility: hidden; top: -9999px; left: -9999px;
+        background: var(--dropdown-bg, var(--card-bg)); border: 1.5px solid #4f6ef7; border-radius: 10px;
+        box-shadow: 0 20px 50px rgba(0,0,0,.3); backdrop-filter: blur(20px); overflow: hidden;
+        width: var(--combo-w, 280px);
+    }
+    .combobox-dropdown.open { display: block; visibility: visible; top: var(--combo-top, 0); left: var(--combo-left, 0); animation: comboPopIn .16s ease; }
+    @keyframes comboPopIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .combobox-search-wrap { position: relative; padding: 6px; border-bottom: 1px solid var(--card-border); }
+    .combobox-search-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: .72rem; width: 14px; text-align: center; pointer-events: none; }
+    .combobox-search { width: 100%; padding: 9px 10px 9px 38px; border: none; background: transparent; color: var(--text-primary); font-size: .8rem; outline: none; font-family: inherit; box-sizing: border-box; }
+    .combobox-list { max-height: 240px; overflow-y: auto; scrollbar-width: thin; }
+    .combobox-list::-webkit-scrollbar { width: 5px; }
+    .combobox-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: .84rem; cursor: pointer; color: var(--text-primary); transition: background .12s; }
+    .combobox-option:hover, .combobox-option.highlighted { background: rgba(79,110,247,.1); }
+    .combobox-option.selected-opt { background: rgba(79,110,247,.16); font-weight: 600; color: #4f6ef7; }
+    .combobox-no-results { padding: 12px 14px; color: var(--text-secondary); font-size: .78rem; text-align: center; }
+
     .secret-box {
         background: rgba(79,110,247,.08); border: 1px solid rgba(79,110,247,.25); border-radius: 10px;
         padding: 14px; margin-bottom: 18px; word-break: break-all; font-family: 'DM Mono', monospace; font-size: .78rem;
@@ -652,7 +699,7 @@ unset($_SESSION['reveal_secret']);
         <table class="systems-table">
             <thead>
                 <tr>
-                    <th class="checkbox-col"><input type="checkbox" class="bulk-checkbox bulk-select-all" id="selectAllCheckbox" aria-label="Select all"></th>
+                    <th class="checkbox-col"><label class="bulk-check"><input type="checkbox" class="bulk-checkbox bulk-select-all" id="selectAllCheckbox" aria-label="Select all"><span class="bulk-check-box"><i class="fas fa-check"></i></span></label></th>
                     <th>System</th>
                     <th>Base URL</th>
                     <th>Status</th>
@@ -663,7 +710,7 @@ unset($_SESSION['reveal_secret']);
             <tbody>
             <?php foreach ($systems as $system): $age = secretAgeInfo($system['secret_rotated_at'] ?? null); ?>
                 <tr>
-                    <td class="checkbox-col"><input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>"></td>
+                    <td class="checkbox-col"><label class="bulk-check"><input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>"><span class="bulk-check-box"><i class="fas fa-check"></i></span></label></td>
                     <td>
                         <div class="sys-name-cell">
                             <div class="sys-icon-chip <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
@@ -718,7 +765,7 @@ unset($_SESSION['reveal_secret']);
         <?php foreach ($systems as $system): $age = secretAgeInfo($system['secret_rotated_at'] ?? null); ?>
             <div class="sys-card">
                 <div class="sys-card-header">
-                    <input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>">
+                    <label class="bulk-check"><input type="checkbox" class="bulk-checkbox" data-id="<?= (int) $system['id'] ?>" aria-label="Select <?= htmlspecialchars($system['name']) ?>"><span class="bulk-check-box"><i class="fas fa-check"></i></span></label>
                     <div class="sys-icon-chip <?= htmlspecialchars($system['theme_color']) ?>"><i class="fas <?= htmlspecialchars($system['icon']) ?>"></i></div>
                     <div>
                         <div class="sys-card-name"><?= htmlspecialchars($system['name']) ?></div>
@@ -853,20 +900,26 @@ unset($_SESSION['reveal_secret']);
                         <input type="text" name="admin_entry_path" id="formAdminPath" placeholder="/dashboard">
                     </div>
                     <div class="form-field">
-                        <label for="formIcon">Icon</label>
-                        <select name="icon" id="formIcon">
-                            <?php foreach (SYSTEM_ICON_CHOICES as $val => $label): ?>
-                                <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($label) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label for="iconComboDisplay">Icon</label>
+                        <input type="hidden" name="icon" id="formIcon" value="fa-server">
+                        <div class="combobox" id="cbIcon">
+                            <div class="combobox-display" id="iconComboDisplay" tabindex="0">
+                                <span class="combo-icon-preview"><i class="fas fa-server" id="iconComboPreviewIcon"></i></span>
+                                <span id="iconComboLabel">Server (generic)</span>
+                                <span class="combobox-arrow">▾</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-field">
-                        <label for="formThemeColor">Card color</label>
-                        <select name="theme_color" id="formThemeColor">
-                            <?php foreach (SYSTEM_THEME_COLORS as $color): ?>
-                                <option value="<?= $color ?>"><?= ucfirst($color) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label for="colorComboDisplay">Card color</label>
+                        <input type="hidden" name="theme_color" id="formThemeColor" value="blue">
+                        <div class="combobox" id="cbColor">
+                            <div class="combobox-display" id="colorComboDisplay" tabindex="0">
+                                <span class="combo-color-swatch" id="colorComboSwatch" style="background: linear-gradient(135deg,#3b82f6,#1d4ed8);"></span>
+                                <span id="colorComboLabel">Blue</span>
+                                <span class="combobox-arrow">▾</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-field full">
                         <label for="formShortTag">Badge text</label>
@@ -882,6 +935,31 @@ unset($_SESSION['reveal_secret']);
                 </div>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Icon / color combobox dropdowns (fixed-positioned so they escape the
+     form modal's scrollable body, same technique as the date picker) -->
+<div class="combobox-dropdown" id="iconComboDropdown">
+    <div class="combobox-search-wrap"><i class="fas fa-search"></i><input class="combobox-search" type="text" id="iconComboSearch" placeholder="Search icons…" autocomplete="off"></div>
+    <div class="combobox-list" id="iconComboList">
+        <?php foreach (SYSTEM_ICON_CHOICES as $val => $label): ?>
+            <div class="combobox-option combo-option--icon" data-value="<?= htmlspecialchars($val) ?>" data-label="<?= htmlspecialchars($label) ?>">
+                <span class="combo-icon-preview"><i class="fas <?= htmlspecialchars($val) ?>"></i></span>
+                <span><?= htmlspecialchars($label) ?></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<div class="combobox-dropdown" id="colorComboDropdown">
+    <div class="combobox-search-wrap"><i class="fas fa-search"></i><input class="combobox-search" type="text" id="colorComboSearch" placeholder="Search colors…" autocomplete="off"></div>
+    <div class="combobox-list" id="colorComboList">
+        <?php foreach (SYSTEM_THEME_COLORS as $color): [$light, $dark] = systemThemeGradientHex($color); ?>
+            <div class="combobox-option combo-option--icon" data-value="<?= $color ?>" data-label="<?= ucfirst($color) ?>" data-light="<?= $light ?>" data-dark="<?= $dark ?>">
+                <span class="combo-color-swatch" style="background: linear-gradient(135deg,<?= $light ?>,<?= $dark ?>);"></span>
+                <span><?= ucfirst($color) ?></span>
+            </div>
+        <?php endforeach; ?>
     </div>
 </div>
 
@@ -1020,6 +1098,112 @@ setTimeout(closeNotif, 4500);
     document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
 })();
 
+// Icon / color comboboxes (CIMM-style searchable dropdown), fixed-positioned
+// so they escape the form modal's scrollable body — same math as the date
+// picker overlay elsewhere in this admin.
+(function () {
+    function makeIconColorCombo(cfg) {
+        var display = document.getElementById(cfg.display);
+        var dropdown = document.getElementById(cfg.dropdown);
+        var search = document.getElementById(cfg.search);
+        var list = document.getElementById(cfg.list);
+        var hidden = document.getElementById(cfg.hidden);
+        var options = Array.prototype.slice.call(list.querySelectorAll('.combobox-option'));
+
+        function position() {
+            var rect = display.getBoundingClientRect();
+            dropdown.style.setProperty('--combo-w', rect.width + 'px');
+            var top = rect.bottom + 6;
+            var left = rect.left;
+            var approxHeight = Math.min(280, options.length * 38 + 50);
+            if (top + approxHeight > window.innerHeight - 10) {
+                top = Math.max(10, rect.top - approxHeight - 6);
+            }
+            dropdown.style.setProperty('--combo-top', top + 'px');
+            dropdown.style.setProperty('--combo-left', left + 'px');
+        }
+
+        function isOpen() { return dropdown.classList.contains('open'); }
+
+        function filter(q) {
+            var ql = q.toLowerCase();
+            var visible = 0;
+            options.forEach(function (o) {
+                var match = !ql || o.dataset.label.toLowerCase().indexOf(ql) !== -1;
+                o.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            var noRes = list.querySelector('.combobox-no-results');
+            if (!visible && !noRes) {
+                var d = document.createElement('div');
+                d.className = 'combobox-no-results';
+                d.textContent = 'No results found';
+                list.appendChild(d);
+            } else if (visible && noRes) {
+                noRes.remove();
+            }
+        }
+
+        function open() {
+            position();
+            dropdown.classList.add('open');
+            display.classList.add('open');
+            search.value = '';
+            filter('');
+            setTimeout(function () { search.focus(); }, 30);
+        }
+
+        function close() {
+            dropdown.classList.remove('open');
+            display.classList.remove('open');
+        }
+
+        function applySelection(opt) {
+            hidden.value = opt.dataset.value;
+            cfg.onSelect(opt);
+            options.forEach(function (o) { o.classList.toggle('selected-opt', o === opt); });
+        }
+
+        display.addEventListener('click', function (e) { e.stopPropagation(); isOpen() ? close() : open(); });
+        search.addEventListener('input', function () { filter(search.value); });
+        list.addEventListener('mousedown', function (e) {
+            var opt = e.target.closest('.combobox-option');
+            if (!opt) return;
+            e.preventDefault();
+            applySelection(opt);
+            close();
+        });
+        document.addEventListener('click', function (e) {
+            if (!display.contains(e.target) && !dropdown.contains(e.target)) close();
+        });
+        window.addEventListener('scroll', function () { if (isOpen()) position(); }, true);
+        window.addEventListener('resize', function () { if (isOpen()) close(); });
+
+        return {
+            setValue: function (value) {
+                var opt = options.filter(function (o) { return o.dataset.value === value; })[0];
+                if (opt) applySelection(opt);
+            }
+        };
+    }
+
+    window.iconCombo = makeIconColorCombo({
+        display: 'iconComboDisplay', dropdown: 'iconComboDropdown', search: 'iconComboSearch', list: 'iconComboList', hidden: 'formIcon',
+        onSelect: function (opt) {
+            document.getElementById('iconComboLabel').textContent = opt.dataset.label;
+            document.getElementById('iconComboPreviewIcon').className = 'fas ' + opt.dataset.value;
+        }
+    });
+
+    window.colorCombo = makeIconColorCombo({
+        display: 'colorComboDisplay', dropdown: 'colorComboDropdown', search: 'colorComboSearch', list: 'colorComboList', hidden: 'formThemeColor',
+        onSelect: function (opt) {
+            document.getElementById('colorComboLabel').textContent = opt.dataset.label;
+            document.getElementById('colorComboSwatch').style.background = 'linear-gradient(135deg,' + opt.dataset.light + ',' + opt.dataset.dark + ')';
+        }
+    });
+})();
+
 // Add/Edit modal
 (function () {
     var modal = document.getElementById('formModal');
@@ -1038,6 +1222,8 @@ setTimeout(closeNotif, 4500);
         document.getElementById('formAction').value = 'create';
         document.getElementById('formId').value = '';
         document.getElementById('systemForm').reset();
+        window.iconCombo.setValue('fa-server');
+        window.colorCombo.setValue('blue');
         slugField.style.display = '';
         slugInput.readOnly = false;
         modal.classList.add('show');
@@ -1056,8 +1242,8 @@ setTimeout(closeNotif, 4500);
         document.getElementById('formAdminPath').value = d.adminEntryPath;
         document.getElementById('formSsoPath').value = d.ssoConsumePath;
         document.getElementById('formStatsPath').value = d.statsPath;
-        document.getElementById('formIcon').value = d.icon;
-        document.getElementById('formThemeColor').value = d.themeColor;
+        window.iconCombo.setValue(d.icon);
+        window.colorCombo.setValue(d.themeColor);
         document.getElementById('formShortTag').value = d.shortTag;
         document.getElementById('formIsActive').checked = d.isActive === '1';
         slugField.style.display = 'none';

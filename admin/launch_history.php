@@ -316,7 +316,8 @@ function buildQuery(array $overrides): string
         background: linear-gradient(135deg,#4f6ef7,#3f5adf); color: #fff; font-family: inherit; text-decoration: none;
         display: inline-flex; align-items: center;
     }
-    .filters a.clear-link { background: rgba(120,140,220,.14); color: var(--text-primary); border: 1px solid var(--card-border); }
+    .filters a.clear-link, .filters button.clear-link { background: rgba(120,140,220,.14); color: var(--text-primary); border: 1px solid var(--card-border); }
+    .filters a.clear-link:hover, .filters button.clear-link:hover { background: rgba(120,140,220,.22); }
 
     /* ── Searchable dropdown (System filter) — CIMM-style combobox ── */
     .combobox { position: relative; width: 100%; min-width: 190px; }
@@ -540,7 +541,7 @@ function buildQuery(array $overrides): string
         <?php if ($filterSystem !== '' || $filterFrom !== '' || $filterTo !== ''): ?>
             <a href="launch_history.php" class="clear-link">Clear</a>
         <?php endif; ?>
-        <a href="<?= buildQuery(['export' => 'csv']) ?>" class="clear-link" style="margin-left:auto;"><i class="fas fa-download"></i>&nbsp; Export CSV</a>
+        <button type="button" class="clear-link" id="openExportModal" style="margin-left:auto;"><i class="fas fa-download"></i>&nbsp; Export CSV</button>
     </form>
 
     <div class="history-table-wrap">
@@ -641,6 +642,19 @@ function buildQuery(array $overrides): string
         </div>
     </div>
 </div>
+
+<!-- Export CSV confirmation -->
+<div class="modal-backdrop" id="exportModal" style="position:fixed; inset:0; background:rgba(3,6,16,.55); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px;">
+    <div class="modal-card" style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:30px 26px 24px; max-width:340px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,.4); backdrop-filter:blur(22px); text-align:center; animation: modalPop .25s cubic-bezier(.34,1.56,.64,1);">
+        <div style="width:60px; height:60px; border-radius:50%; margin:0 auto 16px; background:linear-gradient(135deg, rgba(79,110,247,.18), rgba(79,110,247,.08)); border:1.5px solid rgba(79,110,247,.3); display:flex; align-items:center; justify-content:center; color:#4f6ef7; font-size:1.3rem;"><i class="fas fa-download"></i></div>
+        <h2 style="color:var(--text-primary); font-size:1.05rem; margin:0 0 8px;">Export launch history?</h2>
+        <p style="color:var(--text-secondary); font-size:.85rem; margin:0 0 22px; line-height:1.5;" id="exportModalSub">Downloads a CSV of every launch matching the current filters.</p>
+        <div style="display:flex; gap:10px;">
+            <button type="button" id="cancelExport" style="flex:1; padding:11px 0; border-radius:10px; border:1px solid var(--card-border); font-weight:600; font-size:.85rem; cursor:pointer; font-family:inherit; background:rgba(120,140,220,.14); color:var(--text-primary);">Cancel</button>
+            <button type="button" id="confirmExport" style="flex:1; padding:11px 0; border-radius:10px; border:none; font-weight:600; font-size:.85rem; cursor:pointer; font-family:inherit; background:linear-gradient(135deg,#4f6ef7,#3f5adf); color:#fff;">Export</button>
+        </div>
+    </div>
+</div>
 <style>
 .modal-backdrop.show { display: flex !important; }
 @keyframes modalPop { from { transform: translateY(20px) scale(.94); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
@@ -710,6 +724,16 @@ function buildQuery(array $overrides): string
     document.getElementById('openLogoutModal').addEventListener('click', function () { modal.classList.add('show'); });
     document.getElementById('cancelLogout').addEventListener('click', function () { modal.classList.remove('show'); });
     document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
+})();
+
+// Export CSV confirmation
+(function () {
+    var modal = document.getElementById('exportModal');
+    var openBtn = document.getElementById('openExportModal');
+    var exportUrl = <?= json_encode(buildQuery(['export' => 'csv'])) ?>;
+    openBtn.addEventListener('click', function () { modal.classList.add('show'); });
+    document.getElementById('cancelExport').addEventListener('click', function () { modal.classList.remove('show'); });
+    document.getElementById('confirmExport').addEventListener('click', function () { window.location.href = exportUrl; });
 })();
 
 <?php if (!SUPER_ADMIN_IS_LOCALHOST): ?>
