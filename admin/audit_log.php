@@ -496,6 +496,9 @@ function buildQuery(array $overrides): string
             break;
         }
     }
+    $currentActionName = ($filterAction !== '' && isset($actionMeta[$filterAction]))
+        ? $actionMeta[$filterAction]['label']
+        : 'All actions';
     ?>
     <form method="get" class="filters" id="filtersForm">
         <div class="field">
@@ -518,13 +521,23 @@ function buildQuery(array $overrides): string
             </div>
         </div>
         <div class="field">
-            <label for="filterActionSelect">Action</label>
-            <select name="action" id="filterActionSelect">
-                <option value="">All actions</option>
-                <?php foreach ($actionMeta as $key => $meta): ?>
-                    <option value="<?= htmlspecialchars($key) ?>" <?= $filterAction === $key ? 'selected' : '' ?>><?= htmlspecialchars($meta['label']) ?></option>
-                <?php endforeach; ?>
-            </select>
+            <label for="actionComboDisplay">Action</label>
+            <input type="hidden" name="action" id="actionHidden" value="<?= htmlspecialchars($filterAction) ?>">
+            <div class="combobox" id="cbAction">
+                <div class="combobox-display" id="actionComboDisplay" tabindex="0">
+                    <span id="actionComboLabel"><?= htmlspecialchars($currentActionName) ?></span>
+                    <span class="combobox-arrow">▾</span>
+                </div>
+                <div class="combobox-dropdown" id="actionComboDropdown">
+                    <div class="combobox-search-wrap"><i class="fas fa-search"></i><input class="combobox-search" type="text" placeholder="Search actions…" autocomplete="off"></div>
+                    <div class="combobox-list">
+                        <div class="combobox-option <?= $filterAction === '' ? 'selected-opt' : '' ?>" data-value="">All actions</div>
+                        <?php foreach ($actionMeta as $key => $meta): ?>
+                            <div class="combobox-option <?= $filterAction === $key ? 'selected-opt' : '' ?>" data-value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($meta['label']) ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="field">
             <label for="fromDisplay">From</label>
@@ -764,12 +777,13 @@ function buildQuery(array $overrides): string
 })();
 <?php endif; ?>
 
-// Searchable dropdown (System filter) — CIMM-style combobox
-(function () {
-    var display = document.getElementById('systemComboDisplay');
-    var label = document.getElementById('systemComboLabel');
-    var hidden = document.getElementById('systemHidden');
-    var dropdown = document.getElementById('systemComboDropdown');
+// Searchable dropdown (System / Action filters) — CIMM-style combobox
+function initCombobox(ids) {
+    var display = document.getElementById(ids.display);
+    var label = document.getElementById(ids.label);
+    var hidden = document.getElementById(ids.hidden);
+    var dropdown = document.getElementById(ids.dropdown);
+    if (!display || !dropdown) return;
     var search = dropdown.querySelector('.combobox-search');
     var list = dropdown.querySelector('.combobox-list');
     var options = Array.prototype.slice.call(list.querySelectorAll('.combobox-option'));
@@ -821,7 +835,9 @@ function buildQuery(array $overrides): string
     document.addEventListener('click', function (e) {
         if (!display.contains(e.target) && !dropdown.contains(e.target)) close();
     });
-})();
+}
+initCombobox({ display: 'systemComboDisplay', label: 'systemComboLabel', hidden: 'systemHidden', dropdown: 'systemComboDropdown' });
+initCombobox({ display: 'actionComboDisplay', label: 'actionComboLabel', hidden: 'actionHidden', dropdown: 'actionComboDropdown' });
 
 // Custom date picker — CIMM-style popup calendar, two independent instances (From/To)
 (function () {
