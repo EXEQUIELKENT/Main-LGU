@@ -26,6 +26,19 @@ $token = issue_sso_token(
     'super_admin'
 );
 
+// This is a same-tab handoff — the browser is about to navigate fully away
+// from Main LGU into the target system's admin panel, which unloads this
+// page (and any JS timer on it) completely. There's no way for a heartbeat
+// to keep super_admin_last_activity fresh while the admin is working over
+// there, so require_super_admin()'s normal 2-minute idle check would read
+// that time away as plain inactivity and force-logout the moment they came
+// back — landing them on the login screen instead of the dashboard. Flag
+// this session so require_super_admin() forgives exactly one return visit
+// regardless of how long the admin was away (no fixed cutoff — they may be
+// deep in a task over there for a while), then resumes normal 2-minute
+// idle enforcement from that point on.
+$_SESSION['super_admin_return_grace'] = true;
+
 $redirectUrl = rtrim($system['base_url'], '/') . $system['sso_consume_path'] . '?sso_token=' . urlencode($token);
 header('Location: ' . $redirectUrl);
 exit;

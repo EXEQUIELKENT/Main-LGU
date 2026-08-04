@@ -34,20 +34,30 @@ function is_super_admin_logged_in(): bool
     return !empty($_SESSION['super_admin_id']);
 }
 
-// The 2-minute idle timeout below is enforced again — it should still log
-// an admin out for genuinely sitting idle ON this dashboard. What it must
-// NOT do is punish them for time spent working in another system's (e.g.
-// CIMM's) admin panel in a different tab: admin/heartbeat.php + the
-// visibility-aware timer in each admin page's own <script> block only send
-// heartbeats while THIS tab is the visible one, and re-sync
-// super_admin_last_activity the instant this tab regains focus — so time
-// spent away on another tab is never counted against this session, while
-// real inactivity while looking at this dashboard still times out normally.
+// The 2-minute idle timeout below should still log an admin out for
+// genuinely sitting idle ON this dashboard. What it must NOT do is punish
+// them for time spent working in another system's (e.g. CIMM's) admin
+// panel that admin/launch.php sent this SAME tab to via SSO — that fully
+// unloads this page (and any JS timer on it), so no client-side heartbeat
+// can run while they're over there, and there's no fixed cap on how long
+// that work might take. launch.php sets
+// $_SESSION['super_admin_return_grace'] right before redirecting away; the
+// check below forgives exactly ONE return visit (whether that's coming
+// back to the dashboard, or the target system's own logout redirecting
+// back here) no matter how long they were gone, then clears the flag so
+// normal 2-minute idle enforcement resumes immediately from that point on
+// — sitting idle on this dashboard afterward still times out as usual.
 function require_super_admin(): void
 {
     if (!is_super_admin_logged_in()) {
         header('Location: login.php');
         exit;
+    }
+
+    if (!empty($_SESSION['super_admin_return_grace'])) {
+        unset($_SESSION['super_admin_return_grace']);
+        $_SESSION['super_admin_last_activity'] = time();
+        return;
     }
 
     if (!SUPER_ADMIN_IS_LOCALHOST && isset($_SESSION['super_admin_last_activity']) && (time() - $_SESSION['super_admin_last_activity']) > SUPER_ADMIN_SESSION_TIMEOUT) {

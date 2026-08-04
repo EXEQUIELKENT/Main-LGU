@@ -617,6 +617,10 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
         pendingUrl = null;
     });
     confirmBtn.addEventListener('click', function () {
+        // Same-tab redirect (launch.php stamps a grace window into the
+        // session — see includes/auth.php — right before sending this tab
+        // to the other system, so coming back later doesn't get read as
+        // 2+ minutes of plain inactivity).
         if (pendingUrl) window.location.href = pendingUrl;
     });
 })();
