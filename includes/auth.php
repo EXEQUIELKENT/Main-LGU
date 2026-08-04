@@ -34,6 +34,15 @@ function is_super_admin_logged_in(): bool
     return !empty($_SESSION['super_admin_id']);
 }
 
+// The 2-minute idle timeout below is enforced again — it should still log
+// an admin out for genuinely sitting idle ON this dashboard. What it must
+// NOT do is punish them for time spent working in another system's (e.g.
+// CIMM's) admin panel in a different tab: admin/heartbeat.php + the
+// visibility-aware timer in each admin page's own <script> block only send
+// heartbeats while THIS tab is the visible one, and re-sync
+// super_admin_last_activity the instant this tab regains focus — so time
+// spent away on another tab is never counted against this session, while
+// real inactivity while looking at this dashboard still times out normally.
 function require_super_admin(): void
 {
     if (!is_super_admin_logged_in()) {

@@ -742,15 +742,35 @@ function buildQuery(array $overrides): string
 // Disabled on localhost, where the server-side timeout is also disabled.
 (function () {
     var TIMEOUT_MS = 120 * 1000;
+    var HEARTBEAT_MS = 60 * 1000;
     var timer = null;
+    var heartbeatTimer = null;
+    function sendHeartbeat() {
+        fetch('heartbeat.php', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(function () {});
+    }
     function resetTimer() {
+        if (document.hidden) return; // paused while this tab isn't the visible one
         if (timer) clearTimeout(timer);
         timer = setTimeout(function () { window.location.href = 'login.php?timeout=1'; }, TIMEOUT_MS);
     }
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
         document.addEventListener(evt, resetTimer, { passive: true });
     });
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            if (timer) clearTimeout(timer);
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+        } else {
+            // Returning from another tab (e.g. CIMM's admin panel) — resync
+            // the server-side timestamp before anything else runs, so time
+            // spent away isn't counted against this session.
+            sendHeartbeat();
+            resetTimer();
+            heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_MS);
+        }
+    });
     resetTimer();
+    if (!document.hidden) heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_MS);
 })();
 <?php endif; ?>
 
