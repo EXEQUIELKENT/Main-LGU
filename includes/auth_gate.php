@@ -9,6 +9,15 @@
  * output, then check $show_login in the page.
  */
 if (session_status() === PHP_SESSION_NONE) {
+    // Same distinct-cookie-name fix applied to the admin session in
+    // includes/auth.php: on local XAMPP every app under htdocs/ shares the
+    // same "localhost" host and PHP's default session.cookie_path=/, so
+    // without this, this citizen-dashboard session shared the default
+    // PHPSESSID cookie with whichever sibling system (CIMM, lg-road-monitoring)
+    // the browser last touched — a session_start()/expiry there could
+    // silently wipe $_SESSION['authorized_access'] here too.
+    session_name('MAINLGU_CITIZEN_SESSID');
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
 }
 
