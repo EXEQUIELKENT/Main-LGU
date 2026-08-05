@@ -123,7 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['super_admin_id'] = $admin['id'];
                     $_SESSION['super_admin_name'] = $admin['full_name'];
                     $_SESSION['super_admin_email'] = $admin['email'];
-                    mainLguDb()->prepare('UPDATE super_admins SET last_login = NOW() WHERE id = ?')->execute([$admin['id']]);
+                    // Written from PHP's own clock, not MySQL's NOW() — NOW() runs in the DB
+// SERVER's own timezone (UTC on the live domain, Asia/Manila here), while
+// team.php later reads this back with PHP's strtotime(), which assumes
+// PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
+mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
                     header('Location: dashboard.php');
                     exit;
                 }
@@ -153,8 +157,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($admin) {
                     $attempts = $admin['failed_login_attempts'] + 1;
                     if ($attempts >= LOGIN_MAX_ATTEMPTS) {
-                        mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?')
-                            ->execute([LOGIN_LOCKOUT_MINUTES, $admin['id']]);
+                        // Computed from PHP's own clock, not MySQL's NOW() —
+                        // this is the exact mismatch the timezone comment at
+                        // the top of includes/auth.php calls out (a lockout
+                        // countdown showing "375 minutes" instead of 15).
+                        // date_default_timezone_set('Asia/Manila') only
+                        // masks it because THIS box's MySQL happens to run
+                        // in Asia/Manila too; the live domain's MySQL is UTC,
+                        // so DATE_ADD(NOW(), ...) would reintroduce the same
+                        // gap there. Computing the value in PHP sidesteps
+                        // the DB server's timezone entirely.
+                        $lockedUntil = date('Y-m-d H:i:s', time() + (LOGIN_LOCKOUT_MINUTES * 60));
+                        mainLguDb()->prepare('UPDATE super_admins SET failed_login_attempts = 0, locked_until = ? WHERE id = ?')
+                            ->execute([$lockedUntil, $admin['id']]);
                         require_once __DIR__ . '/../includes/security_alerts.php';
                         sendSecurityAlert(
                             'Account locked after failed logins',
@@ -207,7 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['super_admin_id'] = $admin['id'];
             $_SESSION['super_admin_name'] = $admin['full_name'];
             $_SESSION['super_admin_email'] = $admin['email'];
-            mainLguDb()->prepare('UPDATE super_admins SET last_login = NOW() WHERE id = ?')->execute([$admin['id']]);
+            // Written from PHP's own clock, not MySQL's NOW() — NOW() runs in the DB
+// SERVER's own timezone (UTC on the live domain, Asia/Manila here), while
+// team.php later reads this back with PHP's strtotime(), which assumes
+// PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
+mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
 
             header('Location: dashboard.php');
             exit;
@@ -257,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             if ($usedRecoveryCodeId !== null) {
-                mainLguDb()->prepare('UPDATE super_admin_recovery_codes SET used_at = NOW() WHERE id = ?')->execute([$usedRecoveryCodeId]);
+                mainLguDb()->prepare('UPDATE super_admin_recovery_codes SET used_at = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $usedRecoveryCodeId]);
             }
 
             unset($_SESSION['pending_admin_id'], $_SESSION['pending_totp_attempts'], $_SESSION['show_totp_form']);
@@ -266,7 +285,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['super_admin_id'] = $admin['id'];
             $_SESSION['super_admin_name'] = $admin['full_name'];
             $_SESSION['super_admin_email'] = $admin['email'];
-            mainLguDb()->prepare('UPDATE super_admins SET last_login = NOW() WHERE id = ?')->execute([$admin['id']]);
+            // Written from PHP's own clock, not MySQL's NOW() — NOW() runs in the DB
+// SERVER's own timezone (UTC on the live domain, Asia/Manila here), while
+// team.php later reads this back with PHP's strtotime(), which assumes
+// PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
+mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
 
             header('Location: dashboard.php');
             exit;

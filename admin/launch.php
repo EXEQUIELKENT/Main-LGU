@@ -15,8 +15,13 @@ if (!$system) {
     exit('Unknown or inactive system.');
 }
 
-$log = mainLguDb()->prepare('INSERT INTO sso_launch_log (super_admin_id, system_slug, ip_address) VALUES (?, ?, ?)');
-$log->execute([$_SESSION['super_admin_id'], $system['slug'], $_SERVER['REMOTE_ADDR'] ?? null]);
+// launched_at written from PHP's own clock, not the column's DEFAULT
+// CURRENT_TIMESTAMP — same fix as last_login above and system_audit_log's
+// logSystemAudit(): MySQL's default runs in the DB server's own timezone,
+// which team.php's/launch_history.php's strtotime() display would then
+// misread on the live domain.
+$log = mainLguDb()->prepare('INSERT INTO sso_launch_log (super_admin_id, system_slug, ip_address, launched_at) VALUES (?, ?, ?, ?)');
+$log->execute([$_SESSION['super_admin_id'], $system['slug'], $_SERVER['REMOTE_ADDR'] ?? null, date('Y-m-d H:i:s')]);
 
 $token = issue_sso_token(
     $system['shared_secret'],

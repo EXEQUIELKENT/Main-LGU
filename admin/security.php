@@ -53,8 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($secret === '' || !totp_verify($secret, $code)) {
             setNotification('error', 'Incorrect code. Check your authenticator app and try again.');
         } else {
-            mainLguDb()->prepare('UPDATE super_admins SET totp_secret = ?, totp_enabled = 1, totp_confirmed_at = NOW() WHERE id = ?')
-                ->execute([$secret, $admin['id']]);
+            // totp_confirmed_at written from PHP's own clock, not NOW() —
+            // this page displays it as "Enabled since ..." via strtotime(),
+            // which would misread a DB-server-timezone value on the live
+            // domain (same fix as last_login etc.).
+            mainLguDb()->prepare('UPDATE super_admins SET totp_secret = ?, totp_enabled = 1, totp_confirmed_at = ? WHERE id = ?')
+                ->execute([$secret, date('Y-m-d H:i:s'), $admin['id']]);
 
             mainLguDb()->prepare('DELETE FROM super_admin_recovery_codes WHERE super_admin_id = ?')->execute([$admin['id']]);
             $codes = totp_generate_recovery_codes();

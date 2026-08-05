@@ -7,8 +7,12 @@
  */
 function logSystemAudit(string $action, string $slug, string $name, ?string $details = null): void
 {
+    // created_at written from PHP's own clock, not the column's DEFAULT
+    // CURRENT_TIMESTAMP — MySQL's default runs in the DB server's own
+    // timezone, which audit_log.php's/team.php's strtotime() display would
+    // then misread on the live domain (same fix as sso_launch_log.launched_at).
     mainLguDb()->prepare(
-        'INSERT INTO system_audit_log (super_admin_id, action, system_slug, system_name, details, ip_address) VALUES (?,?,?,?,?,?)'
+        'INSERT INTO system_audit_log (super_admin_id, action, system_slug, system_name, details, ip_address, created_at) VALUES (?,?,?,?,?,?,?)'
     )->execute([
         $_SESSION['super_admin_id'] ?? null,
         $action,
@@ -16,6 +20,7 @@ function logSystemAudit(string $action, string $slug, string $name, ?string $det
         $name,
         $details,
         $_SERVER['REMOTE_ADDR'] ?? null,
+        date('Y-m-d H:i:s'),
     ]);
 }
 

@@ -64,9 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $secret = bin2hex(random_bytes(32));
                 try {
+                    // secret_rotated_at written from PHP's own clock, not
+                    // NOW() — secretAgeInfo() below reads it back with
+                    // strtotime(), which would misread a DB-server-timezone
+                    // value on the live domain (same fix as last_login etc.).
                     mainLguDb()->prepare(
-                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag, public_tagline, secret_rotated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW())'
-                    )->execute([$slug, $name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $secret, $isActive, $icon, $themeColor, $shortTag, $publicTagline ?: null]);
+                        'INSERT INTO connected_systems (slug, name, base_url, admin_entry_path, sso_consume_path, stats_path, shared_secret, is_active, icon, theme_color, short_tag, public_tagline, secret_rotated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                    )->execute([$slug, $name, $baseUrl, $adminEntryPath, $ssoConsumePath, $statsPath ?: null, $secret, $isActive, $icon, $themeColor, $shortTag, $publicTagline ?: null, date('Y-m-d H:i:s')]);
                     logSystemAudit('create', $slug, $name);
                     sendSecurityAlert(
                         'New connected system added',
@@ -139,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row = $stmt->fetch();
         if ($row) {
             $secret = bin2hex(random_bytes(32));
-            mainLguDb()->prepare('UPDATE connected_systems SET shared_secret = ?, secret_rotated_at = NOW() WHERE id = ?')->execute([$secret, $id]);
+            mainLguDb()->prepare('UPDATE connected_systems SET shared_secret = ?, secret_rotated_at = ? WHERE id = ?')->execute([$secret, date('Y-m-d H:i:s'), $id]);
             logSystemAudit('rotate_secret', $row['slug'], $row['name']);
             sendSecurityAlert(
                 'Shared secret rotated',

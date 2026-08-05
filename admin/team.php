@@ -566,11 +566,7 @@ $activity = mainLguDb()->query("
                 <span class="status-badge <?= $status['class'] ?>"><?= htmlspecialchars($status['label']) ?></span>
                 <div class="team-row-actions">
                     <?php if ($status['class'] === 'pending' || $status['class'] === 'expired'): ?>
-                        <form method="post" style="display:inline;">
-                            <input type="hidden" name="action" value="resend_invite">
-                            <input type="hidden" name="id" value="<?= (int) $admin['id'] ?>">
-                            <button type="submit" class="row-btn">Resend invite</button>
-                        </form>
+                        <button type="button" class="row-btn resend-invite-btn" data-id="<?= (int) $admin['id'] ?>" data-name="<?= htmlspecialchars($admin['full_name']) ?>">Resend invite</button>
                         <button type="button" class="row-btn danger revoke-btn" data-id="<?= (int) $admin['id'] ?>" data-name="<?= htmlspecialchars($admin['full_name']) ?>">Revoke</button>
                     <?php elseif ($status['class'] === 'active' && !$isSelf): ?>
                         <button type="button" class="row-btn danger deactivate-btn" data-id="<?= (int) $admin['id'] ?>" data-name="<?= htmlspecialchars($admin['full_name']) ?>">Deactivate</button>
@@ -626,6 +622,23 @@ $activity = mainLguDb()->query("
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" id="cancelInviteAdmin">Cancel</button>
                 <button type="submit" class="btn-confirm btn-confirm--info">Send invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resend invite confirmation -->
+<div class="modal-backdrop" id="resendInviteModal">
+    <div class="modal-card">
+        <div class="modal-icon-wrap"><i class="fas fa-paper-plane"></i></div>
+        <h2>Resend invite to <span id="resendInviteName"></span>?</h2>
+        <p class="modal-sub">This sends a fresh invite email and resets the link's expiry.</p>
+        <form method="post" id="resendInviteForm">
+            <input type="hidden" name="action" value="resend_invite">
+            <input type="hidden" name="id" id="resendInviteId">
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="cancelResendInvite">Cancel</button>
+                <button type="submit" class="btn-confirm">Resend invite</button>
             </div>
         </form>
     </div>
@@ -770,6 +783,19 @@ setTimeout(closeNotif, 4500);
     var modal = document.getElementById('inviteAdminModal');
     document.getElementById('openInviteModal').addEventListener('click', function () { modal.classList.add('show'); });
     document.getElementById('cancelInviteAdmin').addEventListener('click', function () { modal.classList.remove('show'); });
+})();
+
+// Resend invite modal
+(function () {
+    var modal = document.getElementById('resendInviteModal');
+    document.querySelectorAll('.resend-invite-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('resendInviteId').value = btn.dataset.id;
+            document.getElementById('resendInviteName').textContent = btn.dataset.name;
+            modal.classList.add('show');
+        });
+    });
+    document.getElementById('cancelResendInvite').addEventListener('click', function () { modal.classList.remove('show'); });
 })();
 
 // Revoke invite modal
