@@ -18,7 +18,7 @@ function mainLguMailer(): PHPMailer
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
     $mail->Username = 'lguportal2026@gmail.com';
-    $mail->Password = 'iispigiketmacsma';
+    $mail->Password = 'whcq ieci jieq dctj';
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     $mail->CharSet = 'UTF-8';
