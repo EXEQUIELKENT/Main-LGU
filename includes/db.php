@@ -1,4 +1,7 @@
 <?php
+// mlgu_url()/mlgu_url_attr() — opaque page URLs; see includes/page_routes.php.
+require_once __DIR__ . "/page_routes.php";
+
 require_once __DIR__ . '/env.php';
 
 function mainLguDb(): PDO

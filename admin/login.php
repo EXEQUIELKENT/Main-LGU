@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/mailer.php';
 
 if (is_super_admin_logged_in()) {
-    header('Location: dashboard.php');
+    header('Location: ' . mlgu_url('dashboard.php'));
     exit;
 }
 
@@ -40,7 +40,7 @@ function renderNotification(): void
 // query string, re-arming this notification for the OTP screen that follows.
 if (isset($_GET['timeout']) && $_SERVER['REQUEST_METHOD'] === 'GET') {
     setNotification('info', 'You were signed out after 2 minutes of inactivity.');
-    header('Location: login.php');
+    header('Location: ' . mlgu_url('login.php'));
     exit;
 }
 
@@ -59,7 +59,7 @@ if (isset($_GET['reset_token'])) {
         setNotification('error', 'That password reset link is invalid or has expired.');
     }
 
-    header('Location: login.php');
+    header('Location: ' . mlgu_url('login.php'));
     exit;
 }
 
@@ -79,7 +79,7 @@ if (isset($_GET['invite_token'])) {
         setNotification('error', 'That invite link is invalid or has expired. Ask whoever invited you to send a new one.');
     }
 
-    header('Location: login.php');
+    header('Location: ' . mlgu_url('login.php'));
     exit;
 }
 
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['pending_admin_id'] = $admin['id'];
                     $_SESSION['pending_totp_attempts'] = 0;
                     $_SESSION['show_totp_form'] = true;
-                    header('Location: login.php');
+                    header('Location: ' . mlgu_url('login.php'));
                     exit;
                 }
 
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // team.php later reads this back with PHP's strtotime(), which assumes
 // PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
 mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
-                    header('Location: dashboard.php');
+                    header('Location: ' . mlgu_url('dashboard.php'));
                     exit;
                 }
 
@@ -187,7 +187,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
             }
         }
 
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -228,11 +228,11 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
 // PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
 mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
 
-            header('Location: dashboard.php');
+            header('Location: ' . mlgu_url('dashboard.php'));
             exit;
         }
 
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -291,11 +291,11 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
 // PHP's timezone. Same fix as CIMM's activity_log.php / notif_helper.php.
 mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i:s'), $admin['id']]);
 
-            header('Location: dashboard.php');
+            header('Location: ' . mlgu_url('dashboard.php'));
             exit;
         }
 
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -327,7 +327,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
             setNotification('warning', 'Please wait before requesting another code.');
         }
 
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -363,7 +363,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
         // Same message regardless of whether the email matched, so login
         // enumeration isn't possible via this form.
         setNotification('success', 'If that email is registered, a reset link has been sent.');
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -381,7 +381,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
             setNotification('error', 'This reset link is no longer valid. Please request a new one.');
         } elseif (strlen($newPassword) < 8 || $newPassword !== $confirmPassword) {
             setNotification('error', 'Passwords must match and be at least 8 characters.');
-            header('Location: login.php');
+            header('Location: ' . mlgu_url('login.php'));
             exit;
         } else {
             mainLguDb()->prepare('UPDATE super_admins SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?')
@@ -390,7 +390,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
         }
 
         unset($_SESSION['show_reset_modal'], $_SESSION['reset_admin_id'], $_SESSION['reset_token']);
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 
@@ -408,7 +408,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
             setNotification('error', 'This invite link is no longer valid. Ask another Super Admin to send a new one.');
         } elseif (strlen($newPassword) < 8 || $newPassword !== $confirmPassword) {
             setNotification('error', 'Passwords must match and be at least 8 characters.');
-            header('Location: login.php');
+            header('Location: ' . mlgu_url('login.php'));
             exit;
         } else {
             mainLguDb()->prepare('UPDATE super_admins SET password_hash = ?, is_active = 1, invite_token = NULL, invite_token_expires = NULL WHERE id = ?')
@@ -417,7 +417,7 @@ mainLguDb()->prepare('UPDATE super_admins SET last_login = ? WHERE id = ?')->exe
         }
 
         unset($_SESSION['show_invite_modal'], $_SESSION['invite_admin_id'], $_SESSION['invite_token'], $_SESSION['invite_full_name']);
-        header('Location: login.php');
+        header('Location: ' . mlgu_url('login.php'));
         exit;
     }
 }
@@ -713,7 +713,7 @@ $otpSecondsLeft = $showOtpForm ? max(0, 60 - (time() - ($_SESSION['pending_otp_t
 <?php renderNotification(); ?>
 
 <div class="top-bar">
-    <a class="back-link" href="../public/citizendash.php"><i class="fas fa-arrow-left"></i> <span class="back-label">Back to InfraGovServices</span></a>
+    <a class="back-link" href="<?= mlgu_url_attr('../public/citizendash.php') ?>"><i class="fas fa-arrow-left"></i> <span class="back-label">Back to InfraGovServices</span></a>
     <div class="top-actions">
         <span class="live-clock"><span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span></span>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">

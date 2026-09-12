@@ -9,6 +9,11 @@
 // showing "375 minutes" instead of 15.
 date_default_timezone_set('Asia/Manila');
 
+// mlgu_url()/mlgu_url_attr() — opaque page URLs. Loaded here because every
+// admin page already includes this file, so the helper reaches all of them
+// without touching each one. See includes/page_routes.php.
+require_once __DIR__ . '/page_routes.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     // Distinct cookie name so this session can never collide with (or be
     // wiped by) a sibling system's own PHPSESSID cookie — e.g. on local

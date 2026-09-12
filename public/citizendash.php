@@ -140,7 +140,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 <header class="db-nav" id="dashMainNav">
     <div class="db-nav-inner">
         <!-- Logo -->
-        <a href="<?= $BASE_URL ?>citizendash.php" class="db-nav-logo">
+        <a href="<?= mlgu_url_attr('citizendash.php') ?>" class="db-nav-logo">
             <img src="<?= $OFFICIAL_LOGO ?>" alt="LGU Logo">
             <span>
                 <strong data-i18n="site_title_short">InfraGovServices</strong>
@@ -156,7 +156,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
             <a href="#dashGallery" class="db-nav-link"        data-i18n="nav_gallery">Facilities</a>
             <a href="privacy.php"  class="db-nav-link"        data-i18n="nav_privacy">Privacy</a>
             <?php if ($show_login): ?>
-                <a href="../admin/login.php" class="db-nav-link">Log in</a>
+                <a href="<?= mlgu_url_attr('../admin/login.php') ?>" class="db-nav-link">Log in</a>
             <?php endif; ?>
         </nav>
 
@@ -195,7 +195,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
 ════════════════════════════════════════════════════ -->
 <nav class="db-sidebar" id="dashSidebar">
     <div class="db-sidebar-header">
-        <a href="<?= $BASE_URL ?>citizendash.php" class="db-sidebar-brand">
+        <a href="<?= mlgu_url_attr('citizendash.php') ?>" class="db-sidebar-brand">
             <img src="<?= $OFFICIAL_LOGO ?>" alt="LGU Logo">
             <div>
                 <strong data-i18n="site_title_short">InfraGovServices</strong>
@@ -212,7 +212,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
         <li><a href="#dashGallery"> <i class="fas fa-landmark"></i><span data-i18n="nav_gallery">Facilities</span></a></li>
         <li><a href="privacy.php">  <i class="fas fa-file-shield"></i><span data-i18n="nav_privacy">Privacy Policy</span></a></li>
         <?php if ($show_login): ?>
-            <li><a href="../admin/login.php"><i class="fas fa-sign-in-alt"></i><span>Log in</span></a></li>
+            <li><a href="<?= mlgu_url_attr('../admin/login.php') ?>"><i class="fas fa-sign-in-alt"></i><span>Log in</span></a></li>
         <?php endif; ?>
     </ul>
 
@@ -226,7 +226,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
     <button class="db-mobile-menu-btn" id="dashMobileToggle">
         <span></span><span></span><span></span>
     </button>
-    <a href="<?= $BASE_URL ?>citizendash.php" class="db-mobile-logo">
+    <a href="<?= mlgu_url_attr('citizendash.php') ?>" class="db-mobile-logo">
         <img src="<?= $OFFICIAL_LOGO ?>" alt="LGU Logo">
         <span data-i18n="site_title_short">InfraGovServices</span>
     </a>

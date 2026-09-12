@@ -463,13 +463,13 @@ function buildQuery(array $overrides): string
         </div>
     </div>
     <ul class="sidebar-nav-list">
-        <li><a href="dashboard.php" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
-        <li><a href="systems.php" class="sidebar-link"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
-        <li><a href="launch_history.php" class="sidebar-link active"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
-        <li><a href="analytics.php" class="sidebar-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-        <li><a href="audit_log.php" class="sidebar-link"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
-        <li><a href="team.php" class="sidebar-link"><i class="fas fa-users"></i><span>Team</span></a></li>
-        <li><a href="security.php" class="sidebar-link"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
+        <li><a href="<?= mlgu_url_attr('dashboard.php') ?>" class="sidebar-link"><i class="fas fa-gauge"></i><span>Dashboard</span></a></li>
+        <li><a href="<?= mlgu_url_attr('systems.php') ?>" class="sidebar-link"><i class="fas fa-server"></i><span>Connected Systems</span></a></li>
+        <li><a href="<?= mlgu_url_attr('launch_history.php') ?>" class="sidebar-link active"><i class="fas fa-clock-rotate-left"></i><span>Launch History</span></a></li>
+        <li><a href="<?= mlgu_url_attr('analytics.php') ?>" class="sidebar-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+        <li><a href="<?= mlgu_url_attr('audit_log.php') ?>" class="sidebar-link"><i class="fas fa-list-check"></i><span>Audit Log</span></a></li>
+        <li><a href="<?= mlgu_url_attr('team.php') ?>" class="sidebar-link"><i class="fas fa-users"></i><span>Team</span></a></li>
+        <li><a href="<?= mlgu_url_attr('security.php') ?>" class="sidebar-link"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
     </ul>
     <div class="sidebar-bottom">
         <div class="sidebar-user">
@@ -540,7 +540,7 @@ function buildQuery(array $overrides): string
         </div>
         <button type="submit"><i class="fas fa-filter"></i>&nbsp; Filter</button>
         <?php if ($filterSystem !== '' || $filterFrom !== '' || $filterTo !== ''): ?>
-            <a href="launch_history.php" class="clear-link">Clear</a>
+            <a href="<?= mlgu_url_attr('launch_history.php') ?>" class="clear-link">Clear</a>
         <?php endif; ?>
         <button type="button" class="clear-link" id="openExportModal" style="margin-left:auto;"><i class="fas fa-download"></i>&nbsp; Export CSV</button>
     </form>
@@ -724,7 +724,7 @@ function buildQuery(array $overrides): string
     var modal = document.getElementById('logoutModal');
     document.getElementById('openLogoutModal').addEventListener('click', function () { modal.classList.add('show'); });
     document.getElementById('cancelLogout').addEventListener('click', function () { modal.classList.remove('show'); });
-    document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href = 'logout.php'; });
+    document.getElementById('confirmLogout').addEventListener('click', function () { window.location.href='<?= mlgu_url_attr('logout.php') ?>'; });
 })();
 
 // Export CSV confirmation
@@ -745,7 +745,7 @@ function buildQuery(array $overrides): string
     var timer = null;
     function resetTimer() {
         if (timer) clearTimeout(timer);
-        timer = setTimeout(function () { window.location.href = 'login.php?timeout=1'; }, TIMEOUT_MS);
+        timer = setTimeout(function () { window.location.href='<?= mlgu_url_attr('login.php') ?>?timeout=1'; }, TIMEOUT_MS);
     }
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
         document.addEventListener(evt, resetTimer, { passive: true });
