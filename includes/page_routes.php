@@ -27,8 +27,8 @@ if (!function_exists('mlgu_route_dirs')) {
     /** Directories whose pages get tokenised => files inside that must keep their real name. */
     function mlgu_route_dirs(): array {
         return [
-            'admin'  => ['_r.php'],
-            'public' => ['_r.php'],
+            'admin'  => ['r.php', '_r.php'],
+            'public' => ['r.php', '_r.php'],
         ];
     }
 }
@@ -71,6 +71,10 @@ if (!function_exists('mlgu_route_secret')) {
  *   'off'    — _r.php missing: emit the real .php URL, i.e. exactly how the
  *              site behaved before any of this existed
  */
+if (!defined('MLGU_ROUTER_FILE')) {
+    define('MLGU_ROUTER_FILE', 'r.php');
+}
+
 if (!function_exists('mlgu_route_mode')) {
     function mlgu_route_mode(string $dir): string {
         static $cache = [];
@@ -78,13 +82,24 @@ if (!function_exists('mlgu_route_mode')) {
             return $cache[$dir];
         }
         $base = mlgu_app_dir() . '/' . $dir;
-        if (!is_file($base . '/_r.php')) {
+
+        // Accept the legacy underscore name too, so an install that already
+        // has _r.php deployed keeps working without re-uploading anything.
+        $router = null;
+        foreach ([MLGU_ROUTER_FILE, '_r.php'] as $candidate) {
+            if (is_file($base . '/' . $candidate)) { $router = $candidate; break; }
+        }
+        if ($router === null) {
             return $cache[$dir] = 'off';
         }
-        if (!is_file($base . '/.htaccess')) {
-            return $cache[$dir] = 'query';
+        // Pretty URLs need the .htaccess rewrite, which is exactly the kind of
+        // file deployment tooling skips — so it is opt-in, and the query form
+        // (which cannot fail that way) is the default.
+        if (defined('MLGU_PRETTY_PAGE_URLS') && MLGU_PRETTY_PAGE_URLS === true
+            && is_file($base . '/.htaccess')) {
+            return $cache[$dir] = 'pretty';
         }
-        return $cache[$dir] = 'pretty';
+        return $cache[$dir] = 'query:' . $router;
     }
 }
 
@@ -191,7 +206,8 @@ if (!function_exists('mlgu_url')) {
         $token = mlgu_page_token($dir, $file);
         $base  = $prefix . ($sub !== '' ? $sub . '/' : '');
 
-        if ($mode === 'query') {
+        if (strncmp($mode, 'query', 5) === 0) {
+            $router = substr($mode, 6) ?: MLGU_ROUTER_FILE;
             $extra = '';
             if ($suffix !== '' && $suffix[0] === '?') {
                 $extra = '&' . substr($suffix, 1);
@@ -204,9 +220,9 @@ if (!function_exists('mlgu_url')) {
                     $hash  = substr($extra, $hp);
                     $extra = substr($extra, 0, $hp);
                 }
-                return $base . '_r.php?__h=' . $token . $extra . $hash;
+                return $base . $router . '?__h=' . $token . $extra . $hash;
             }
-            return $base . '_r.php?__h=' . $token . $extra;
+            return $base . $router . '?__h=' . $token . $extra;
         }
 
         return $base . $token . $suffix;
