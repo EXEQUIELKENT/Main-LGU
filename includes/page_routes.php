@@ -54,6 +54,40 @@ if (!function_exists('mlgu_route_secret')) {
     }
 }
 
+/**
+ * How (and whether) this directory can serve token URLs right now — so a
+ * PARTIAL DEPLOY can never take the site down.
+ *
+ * Tokenised links only work if the files that resolve them actually reached
+ * the server, and "_r.php" / ".htaccess" are exactly what deployment tooling
+ * tends to skip (dotfiles are hidden by default in most FTP clients;
+ * underscore-prefixed files are a common exclude). That really happened on the
+ * CIMM domain: pages were uploaded and began emitting tokens while _r.php had
+ * not been, so every link 404'd — including Log in.
+ *
+ *   'pretty' — _r.php + .htaccess present:  /admin/<token>
+ *   'query'  — _r.php only:                 /admin/_r.php?__h=<token>
+ *              (hides the page name equally well, needs no mod_rewrite)
+ *   'off'    — _r.php missing: emit the real .php URL, i.e. exactly how the
+ *              site behaved before any of this existed
+ */
+if (!function_exists('mlgu_route_mode')) {
+    function mlgu_route_mode(string $dir): string {
+        static $cache = [];
+        if (isset($cache[$dir])) {
+            return $cache[$dir];
+        }
+        $base = mlgu_app_dir() . '/' . $dir;
+        if (!is_file($base . '/_r.php')) {
+            return $cache[$dir] = 'off';
+        }
+        if (!is_file($base . '/.htaccess')) {
+            return $cache[$dir] = 'query';
+        }
+        return $cache[$dir] = 'pretty';
+    }
+}
+
 if (!function_exists('mlgu_page_token')) {
     function mlgu_page_token(string $dir, string $file): string {
         return substr(hash_hmac('sha256', $dir . '/' . $file, mlgu_route_secret()), 0, 16);
@@ -149,7 +183,33 @@ if (!function_exists('mlgu_url')) {
             return $target;
         }
 
-        return $prefix . ($sub !== '' ? $sub . '/' : '') . mlgu_page_token($dir, $file) . $suffix;
+        $mode = mlgu_route_mode($dir);
+        if ($mode === 'off') {
+            return $target;                          // router not deployed here
+        }
+
+        $token = mlgu_page_token($dir, $file);
+        $base  = $prefix . ($sub !== '' ? $sub . '/' : '');
+
+        if ($mode === 'query') {
+            $extra = '';
+            if ($suffix !== '' && $suffix[0] === '?') {
+                $extra = '&' . substr($suffix, 1);
+            } elseif ($suffix !== '') {
+                $extra = $suffix;                    // bare #fragment
+            }
+            if ($extra !== '' && $extra[0] === '&') {
+                $hash = '';
+                if (($hp = strpos($extra, '#')) !== false) {
+                    $hash  = substr($extra, $hp);
+                    $extra = substr($extra, 0, $hp);
+                }
+                return $base . '_r.php?__h=' . $token . $extra . $hash;
+            }
+            return $base . '_r.php?__h=' . $token . $extra;
+        }
+
+        return $base . $token . $suffix;
     }
 }
 
