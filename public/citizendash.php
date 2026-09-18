@@ -687,7 +687,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost') {
      system never delays this page from rendering -->
 <script>
 (function () {
-    fetch('<?= $BASE_URL ?>community_stats_ajax.php', { credentials: 'same-origin' })
+    fetch('<?= mlgu_url('community_stats_ajax.php', 'public') ?>', { credentials: 'same-origin' })
         .then(function (res) { return res.ok ? res.json() : null; })
         .then(function (data) {
             var activityNum = document.getElementById('statActivityNum');

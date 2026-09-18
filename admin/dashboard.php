@@ -561,7 +561,7 @@ $systems = mainLguDb()->query('SELECT * FROM connected_systems ORDER BY id')->fe
 // Fetch each system's headline stat asynchronously so a slow/unreachable
 // system's curl timeout (up to 2.5s server-side) never delays the page itself.
 (function () {
-    fetch('system_stats_ajax.php', { credentials: 'same-origin' })
+    fetch('<?= mlgu_url('system_stats_ajax.php', 'admin') ?>', { credentials: 'same-origin' })
         .then(function (res) { return res.ok ? res.json() : {}; })
         .then(function (stats) {
             document.querySelectorAll('.stat-tile[data-slug]').forEach(function (tile) {
